@@ -1,0 +1,7 @@
+{
+  "name": "Rahu Kaal Tracker",
+  "description": "Daily astrology tracker for Rahu Kaal timings based on your precise location with push notifications.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
