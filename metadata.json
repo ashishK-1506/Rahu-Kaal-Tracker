@@ -1,6 +1,6 @@
 {
   "name": "Rahu Kaal Tracker",
-  "description": "Daily astrology tracker for Rahu Kaal timings based on your precise location with push notifications.",
+  "description": "Free Vedic Astrology tool to track daily Rahu Kaal (Rahu Kalam) timings based on your precise location. Includes weekly forecasts and alerts.",
   "requestFramePermissions": [
     "geolocation"
   ]

@@ -4,6 +4,7 @@ import { Coordinates, DailyData, LoadingState } from './types';
 import { CurrentRahu } from './components/CurrentRahu';
 import { WeeklyTable } from './components/WeeklyTable';
 import { LocationControl } from './components/LocationControl';
+import { AboutSection } from './components/AboutSection';
 import { requestNotificationPermission, scheduleNotification, sendTestNotification } from './services/notificationService';
 import { Bell, BellRing, Info, Loader2, Sun, Moon } from 'lucide-react';
 
@@ -20,6 +21,12 @@ function App() {
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
     'Notification' in window ? Notification.permission : 'default'
   );
+
+  // Notification Preference (Defaults to 15 minutes)
+  const [alertOffset, setAlertOffset] = useState<number>(() => {
+    const saved = localStorage.getItem('alert_offset');
+    return saved ? parseInt(saved, 10) : 15;
+  });
 
   // Theme State
   const [theme, setTheme] = useState(() => {
@@ -40,6 +47,12 @@ function App() {
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
+  const handleOffsetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = parseInt(e.target.value, 10);
+    setAlertOffset(val);
+    localStorage.setItem('alert_offset', val.toString());
   };
 
   useEffect(() => {
@@ -67,6 +80,7 @@ function App() {
     }
   }, []);
 
+  // 1. Data Fetching Effect
   useEffect(() => {
     async function loadData() {
       setLoading(LoadingState.LOADING);
@@ -77,19 +91,20 @@ function App() {
         setDailyData(today);
         setForecast(week);
         setLoading(LoadingState.SUCCESS);
-
-        // Re-schedule notifications if data updates
-        if (notifPermission === 'granted') {
-          scheduleNotification(today.rahu);
-        }
-
       } catch (e) {
         console.error(e);
         setLoading(LoadingState.ERROR);
       }
     }
     loadData();
-  }, [coords, notifPermission]);
+  }, [coords]);
+
+  // 2. Notification Scheduling Effect
+  useEffect(() => {
+    if (notifPermission === 'granted' && dailyData) {
+      scheduleNotification(dailyData.rahu, alertOffset);
+    }
+  }, [dailyData, notifPermission, alertOffset]);
 
   const handleLocationChange = (newCoords: Coordinates) => {
     setCoords(newCoords);
@@ -106,7 +121,7 @@ function App() {
     setNotifPermission(perm);
     
     if (perm === 'granted' && dailyData) {
-      scheduleNotification(dailyData.rahu);
+      scheduleNotification(dailyData.rahu, alertOffset);
       sendTestNotification();
     } else if (perm === 'denied') {
       // If denied, the browser usually won't explicitly prompt again. We must instruct the user.
@@ -125,7 +140,7 @@ function App() {
       <div className="max-w-4xl mx-auto space-y-6">
         
         {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
+        <header role="banner" className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
           <div>
             <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
               Rahu Kaal Tracker
@@ -146,10 +161,25 @@ function App() {
             </button>
 
              {notifPermission === 'granted' ? (
-                 <button className="flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-medium cursor-default">
-                    <BellRing className="w-4 h-4" />
-                    <span>Alerts Active</span>
-                 </button>
+                 <div className="flex items-center gap-2 pl-4 pr-2 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-medium transition-colors border border-green-200 dark:border-green-900">
+                    <div className="flex items-center gap-2">
+                      <BellRing className="w-4 h-4" />
+                      <span className="hidden sm:inline">Alert:</span>
+                    </div>
+                    <select 
+                      value={alertOffset}
+                      onChange={handleOffsetChange}
+                      className="bg-transparent border-none outline-none font-bold cursor-pointer text-green-800 dark:text-green-200 hover:text-green-900 dark:hover:text-green-100 py-0.5 rounded focus:ring-2 focus:ring-green-500/50"
+                      aria-label="Set alert time"
+                    >
+                      <option value="0" className="text-slate-900">At Start</option>
+                      <option value="5" className="text-slate-900">5m before</option>
+                      <option value="10" className="text-slate-900">10m before</option>
+                      <option value="15" className="text-slate-900">15m before</option>
+                      <option value="30" className="text-slate-900">30m before</option>
+                      <option value="60" className="text-slate-900">1h before</option>
+                    </select>
+                 </div>
              ) : (
                 <button 
                   onClick={enableNotifications}
@@ -178,30 +208,32 @@ function App() {
         )}
 
         {loading === LoadingState.SUCCESS && dailyData && (
-          <main className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <main role="main" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <CurrentRahu data={dailyData} />
             
-            {/* Info Section */}
+            {/* Info Section - Optimized for SEO */}
             <div className="bg-indigo-50 dark:bg-slate-900 p-6 rounded-2xl border border-indigo-100 dark:border-slate-800 flex gap-4">
               <Info className="w-6 h-6 text-indigo-500 shrink-0 mt-1" />
               <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2">
-                <h4 className="font-bold text-slate-900 dark:text-white">Why track Rahu Kaal?</h4>
+                <h2 className="font-bold text-slate-900 dark:text-white text-base">What is Rahu Kaal?</h2>
                 <p>
-                  In Vedic astrology, Rahu Kaal is considered an inauspicious period lasting about 90 minutes daily. 
-                  It is believed to be unfavorable for starting new ventures, buying assets, or important travel. 
-                  However, routine tasks can continue as normal.
+                  <strong>Rahu Kaal</strong> (or <em>Rahu Kalam</em>) is a specific period of time each day considered inauspicious in <strong>Vedic Astrology</strong>. 
+                  Lasting approximately 90 minutes, this segment of the day varies based on sunrise and sunset times at your location.
                 </p>
-                <p className="text-xs opacity-70 pt-2">
-                  *Calculation based on your local sunrise/sunset times using the 1/8th day segment method.
+                <p>
+                  Astrologers generally recommend avoiding new ventures, auspicious ceremonies (<em>Muhurat</em>), or important travel during this time. 
+                  Use this <strong>daily tracker</strong> to calculate precise Rahu Kaal timings for your city and plan your day effectively.
                 </p>
               </div>
             </div>
 
             <WeeklyTable forecast={forecast} />
+            
+            <AboutSection />
           </main>
         )}
         
-        <footer className="text-center text-slate-400 text-sm py-8">
+        <footer role="contentinfo" className="text-center text-slate-400 text-sm py-8">
            <p>© {new Date().getFullYear()} Rahu Kaal Tracker.</p>
            <p className="text-xs mt-1">Timings are approximate and calculated based on solar data.</p>
         </footer>
