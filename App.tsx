@@ -7,6 +7,7 @@ import { LocationControl } from './components/LocationControl';
 import { AboutSection } from './components/AboutSection';
 import { requestNotificationPermission, scheduleNotification, sendTestNotification } from './services/notificationService';
 import { Bell, BellRing, Info, Loader2, Sun, Moon } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 
 function App() {
   // Default to New Delhi coordinates initially
@@ -238,6 +239,7 @@ function App() {
            <p className="text-xs mt-1">Timings are approximate and calculated based on solar data.</p>
         </footer>
       </div>
+      <Analytics />
     </div>
   );
 }
