@@ -5,6 +5,8 @@ import { CurrentRahu } from './components/CurrentRahu';
 import { WeeklyTable } from './components/WeeklyTable';
 import { LocationControl } from './components/LocationControl';
 import { AboutSection } from './components/AboutSection';
+import { AdContainer } from './components/AdContainer';
+import { SubscriptionForm } from './components/SubscriptionForm';
 import { requestNotificationPermission, scheduleNotification, sendTestNotification } from './services/notificationService';
 import { Bell, BellRing, Info, Loader2, Sun, Moon } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
@@ -212,6 +214,9 @@ function App() {
           <main role="main" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <CurrentRahu data={dailyData} />
             
+            {/* Ad Unit 1 - Main Display */}
+            <AdContainer slotId="YOUR_SLOT_ID_1" />
+            
             {/* Info Section - Optimized for SEO */}
             <div className="bg-indigo-50 dark:bg-slate-900 p-6 rounded-2xl border border-indigo-100 dark:border-slate-800 flex gap-4">
               <Info className="w-6 h-6 text-indigo-500 shrink-0 mt-1" />
@@ -229,6 +234,12 @@ function App() {
             </div>
 
             <WeeklyTable forecast={forecast} />
+            
+            {/* SMS Subscription Form */}
+            <SubscriptionForm currentCoords={coords} />
+            
+            {/* Ad Unit 2 - Secondary Display */}
+            <AdContainer slotId="YOUR_SLOT_ID_2" />
             
             <AboutSection />
           </main>

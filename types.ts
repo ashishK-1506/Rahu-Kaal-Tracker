@@ -1,3 +1,4 @@
+
 export interface Coordinates {
   lat: number;
   lng: number;
@@ -33,4 +34,12 @@ export interface CitySearchResult {
   display_name: string;
   lat: string;
   lon: string;
+}
+
+export interface SubscriberData {
+  name: string;
+  phone: string;
+  location: string;
+  lat: number;
+  lng: number;
 }
