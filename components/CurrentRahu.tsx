@@ -82,7 +82,7 @@ export const CurrentRahu: React.FC<Props> = ({ data }) => {
           )}
 
           {status === 'PASSED' && (
-             <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700/50 px-4 py-1 rounded-full text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider border border-slate-200 dark:border-slate-600">
+             <div className="flex items-center gap-2 bg-emerald-500/10 dark:bg-emerald-500/20 px-4 py-1 rounded-full text-emerald-700 dark:text-emerald-300 text-sm font-bold uppercase tracking-wider border border-emerald-500/30">
                <CheckCircle className="w-4 h-4" />
                Rahu Kaal Passed
              </div>
