@@ -105,21 +105,22 @@ export const LocationControl: React.FC<Props> = ({ currentCoords, onLocationChan
         <div className="flex gap-2 w-full sm:w-auto min-w-[200px]">
           {isSearching ? (
             <div className="relative w-full">
-               <div className="flex items-center gap-2 w-full">
+               <div className="flex items-center gap-2 w-full group">
                 <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
                     <input 
                         type="text" 
                         placeholder="Search city..." 
                         autoFocus
                         value={query} 
                         onChange={handleSearchInput}
-                        className="w-full pl-3 pr-8 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        className="w-full pl-10 pr-8 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                     />
                     {searchLoading && <Loader2 className="absolute right-2 top-2.5 w-4 h-4 animate-spin text-slate-400" />}
                 </div>
                 <button 
                   onClick={() => setIsSearching(false)} 
-                  className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
+                  className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>

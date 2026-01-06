@@ -31,9 +31,9 @@ export const WeeklyTable: React.FC<Props> = ({ forecast }) => {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 font-medium">
             <tr>
-              <th className="px-6 py-4">Date</th>
-              <th className="px-6 py-4">Rahu Kaal Time</th>
-              <th className="px-6 py-4 hidden sm:table-cell">Duration</th>
+              <th className="px-6 py-4 whitespace-nowrap">Date</th>
+              <th className="px-6 py-4 whitespace-nowrap">Rahu Kaal Time</th>
+              <th className="px-6 py-4 hidden sm:table-cell whitespace-nowrap">Duration</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -43,15 +43,15 @@ export const WeeklyTable: React.FC<Props> = ({ forecast }) => {
               
               return (
                 <tr key={day.date.toISOString()} className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${isToday ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`block font-medium ${isToday ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'}`}>
                       {isToday ? 'Today' : formatDate(day.date)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-mono">
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">
                     {formatTime(day.rahu.start)} - {formatTime(day.rahu.end)}
                   </td>
-                  <td className="px-6 py-4 hidden sm:table-cell text-slate-500 dark:text-slate-400">
+                  <td className="px-6 py-4 hidden sm:table-cell text-slate-500 dark:text-slate-400 whitespace-nowrap">
                     {duration} min
                   </td>
                 </tr>
