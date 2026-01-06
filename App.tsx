@@ -83,23 +83,47 @@ function App() {
     }
   }, []);
 
-  // 1. Data Fetching Effect
+  // 1. Data Fetching Effect (Optimized for Perceived Performance)
   useEffect(() => {
+    let isMounted = true;
+
     async function loadData() {
+      // Clear forecast when location changes to show skeleton state
+      setForecast([]);
       setLoading(LoadingState.LOADING);
+      setDailyData(null); // Reset daily data to trigger skeleton
+      
       try {
+        // Step 1: Fetch TODAY's data first (High Priority)
         const today = await getRahuKaal(coords);
-        const week = await getWeeklyForecast(coords);
         
-        setDailyData(today);
-        setForecast(week);
-        setLoading(LoadingState.SUCCESS);
+        if (isMounted) {
+          setDailyData(today);
+          setLoading(LoadingState.SUCCESS); // Render UI immediately
+        }
+
+        // Step 2: Fetch WEEKLY data in background (Low Priority)
+        try {
+          const week = await getWeeklyForecast(coords);
+          if (isMounted) {
+            setForecast(week);
+          }
+        } catch (weekError) {
+          console.warn('Weekly forecast fetch failed:', weekError);
+          // We don't fail the whole UI if just the forecast fails, as we have today's data
+        }
+
       } catch (e) {
         console.error(e);
-        setLoading(LoadingState.ERROR);
+        if (isMounted) {
+          setLoading(LoadingState.ERROR);
+        }
       }
     }
+    
     loadData();
+
+    return () => { isMounted = false; };
   }, [coords]);
 
   // 2. Notification Scheduling Effect
@@ -127,7 +151,6 @@ function App() {
       scheduleNotification(dailyData.rahu, alertOffset);
       sendTestNotification();
     } else if (perm === 'denied') {
-      // If denied, the browser usually won't explicitly prompt again. We must instruct the user.
       alert(
         "Notifications are currently blocked by your browser.\n\n" +
         "To enable them:\n" +
@@ -137,6 +160,9 @@ function App() {
       );
     }
   };
+
+  // Derived state for display
+  const isLoading = loading === LoadingState.LOADING || !dailyData;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8 transition-colors duration-300">
@@ -197,22 +223,17 @@ function App() {
 
         <LocationControl currentCoords={coords} onLocationChange={handleLocationChange} />
 
-        {loading === LoadingState.LOADING && (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-            <Loader2 className="w-10 h-10 animate-spin mb-4" />
-            <p>Calculating planetary positions...</p>
-          </div>
-        )}
-
-        {loading === LoadingState.ERROR && (
+        {loading === LoadingState.ERROR ? (
            <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-2xl text-center">
               Failed to load solar data. Please check your connection or try a different location.
            </div>
-        )}
-
-        {loading === LoadingState.SUCCESS && dailyData && (
+        ) : (
           <main role="main" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <CurrentRahu data={dailyData} />
+            {/* 
+                We always render CurrentRahu now. 
+                If isLoading is true, CurrentRahu renders its internal skeleton.
+            */}
+            <CurrentRahu data={dailyData} isLoading={isLoading} />
             
             {/* Ad Unit 1 - Main Display */}
             <AdContainer slotId="YOUR_SLOT_ID_1" />

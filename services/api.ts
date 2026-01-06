@@ -10,10 +10,28 @@ import { Coordinates, DailyData, RahuTime, CitySearchResult } from '../types';
 // Saturday: 3rd segment (Index 2)
 const RAHU_SEGMENTS = [7, 1, 6, 4, 5, 3, 2];
 
-// Fetch sunrise/sunset data from the public API
+// Simple in-memory cache fallback if localStorage fails
+const memoryCache: Record<string, { sunrise: string; sunset: string }> = {};
+
+// Fetch sunrise/sunset data from the public API with Caching
 async function fetchSolarData(lat: number, lng: number, date: Date): Promise<{ sunrise: string; sunset: string }> {
   // Format date as YYYY-MM-DD
   const dateStr = date.toISOString().split('T')[0];
+  
+  // Use 3 decimal places for cache key (~110m precision) to improve cache hit rate for geolocation
+  const cacheKey = `solar_${lat.toFixed(3)}_${lng.toFixed(3)}_${dateStr}`;
+
+  try {
+    // 1. Try LocalStorage
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch (e) {
+    // 2. Try Memory Cache (fallback)
+    if (memoryCache[cacheKey]) return memoryCache[cacheKey];
+  }
+
   const url = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lng}&date=${dateStr}&formatted=0`;
 
   try {
@@ -24,10 +42,19 @@ async function fetchSolarData(lat: number, lng: number, date: Date): Promise<{ s
       throw new Error('Failed to fetch solar data');
     }
 
-    return {
+    const result = {
       sunrise: data.results.sunrise,
       sunset: data.results.sunset,
     };
+
+    // Save to cache
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(result));
+    } catch (e) {
+      memoryCache[cacheKey] = result;
+    }
+
+    return result;
   } catch (error) {
     console.error('API Error:', error);
     throw error;
@@ -51,20 +78,32 @@ export async function searchCities(query: string): Promise<CitySearchResult[]> {
 
 // Reverse geocoding to get city name
 export async function getCityName(lat: number, lng: number): Promise<string> {
+  // Cache city name requests too, as they are static for a location
+  const cacheKey = `city_${lat.toFixed(3)}_${lng.toFixed(3)}`;
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) return cached;
+  } catch (e) {}
+
   try {
     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`);
     if (!response.ok) throw new Error('Geocoding failed');
     
     const data = await response.json();
+    let cityName = 'Custom Location';
+
     if (data.address) {
       const city = data.address.city || data.address.town || data.address.village || data.address.municipality || data.address.county;
       const state = data.address.state; // || data.address.country;
       
-      if (city && state) return `${city}, ${state}`;
-      if (city) return city;
-      return data.display_name.split(',')[0]; 
+      if (city && state) cityName = `${city}, ${state}`;
+      else if (city) cityName = city;
+      else cityName = data.display_name.split(',')[0]; 
     }
-    return 'Unknown Location';
+
+    try { localStorage.setItem(cacheKey, cityName); } catch (e) {}
+    
+    return cityName;
   } catch (error) {
     console.warn('City fetch error:', error);
     return 'Custom Location';
