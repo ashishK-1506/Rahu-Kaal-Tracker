@@ -29,7 +29,7 @@ export const AdContainer: React.FC<Props> = ({
 
   return (
     <div className={`w-full flex flex-col items-center justify-center my-6 ${className}`}>
-      <div className="text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-widest mb-1 self-start ml-1">Advertisement</div>
+      <div className="text-[10px] text-slate-500 dark:text-slate-500 font-medium uppercase tracking-widest mb-1 self-start ml-1">Advertisement</div>
       <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden min-h-[100px] flex items-center justify-center border border-slate-200 dark:border-slate-800">
           <ins className="adsbygoogle"
                style={{ display: 'block', width: '100%', textAlign: 'center' }}

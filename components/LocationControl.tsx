@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Coordinates, CitySearchResult } from '../types';
 import { getCityName, searchCities } from '../services/api';
@@ -112,7 +113,7 @@ export const LocationControl: React.FC<Props> = ({ currentCoords, onLocationChan
                         autoFocus
                         value={query} 
                         onChange={handleSearchInput}
-                        className="w-full pl-3 pr-8 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        className="w-full pl-3 pr-8 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                     />
                     {searchLoading && <Loader2 className="absolute right-2 top-2.5 w-4 h-4 animate-spin text-slate-400" />}
                 </div>
