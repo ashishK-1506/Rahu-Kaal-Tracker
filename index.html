@@ -33,9 +33,9 @@
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2693/2693507.png" />
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2693/2693507.png" />
 
-    <!-- Performance Optimization: Preconnect to critical domains -->
-    <link rel="preconnect" href="https://api.sunrise-sunset.org">
-    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <!-- Performance Optimization: Preconnect to critical domains with crossorigin -->
+    <link rel="preconnect" href="https://api.sunrise-sunset.org" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com">
 
     <!-- JSON-LD Structured Data for SEO -->
@@ -100,6 +100,21 @@
       ]
     }
     </script>
+    
+    <!-- Inline Critical CSS for Basic Layout Stability -->
+    <style>
+      body {
+        background-color: #f8fafc; /* slate-50 */
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #020617; /* slate-950 */
+          color: #f1f5f9;
+        }
+      }
+    </style>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
