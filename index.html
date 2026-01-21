@@ -115,13 +115,6 @@
         }
       }
     </style>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-      }
-    </script>
     
   <script type="importmap">
 {
@@ -139,6 +132,15 @@
 </head>
   <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
     <div id="root"></div>
+    
+    <!-- Move Render-Blocking Scripts to end of body -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
+    
     <script type="module" src="./index.tsx"></script>
   </body>
 </html>

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Coordinates } from '../types';
 import { subscribeUser } from '../services/subscriptionService';
 import { Smartphone, User, MapPin, CheckCircle, Loader2, Send, AlertCircle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Props {
   currentCoords: Coordinates;
 }
 
 export const SubscriptionForm: React.FC<Props> = ({ currentCoords }) => {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState<'IDLE' | 'LOADING' | 'SUCCESS' | 'ERROR'>('IDLE');
@@ -112,15 +114,15 @@ export const SubscriptionForm: React.FC<Props> = ({ currentCoords }) => {
             <CheckCircle className="w-8 h-8 text-white" />
           </div>
         </div>
-        <h3 className="text-2xl font-bold mb-2">You're Subscribed!</h3>
+        <h3 className="text-2xl font-bold mb-2">{t('successTitle')}</h3>
         <p className="text-indigo-100">
-          We'll send daily Rahu Kaal alerts for <strong>{currentCoords.label || 'your location'}</strong> to your phone.
+          {t('successDesc')} <strong>{currentCoords.label || 'your location'}</strong>.
         </p>
         <button 
           onClick={() => setStatus('IDLE')}
           className="mt-6 text-sm font-medium text-white/80 hover:text-white underline"
         >
-          Register another number
+          {t('registerAnother')}
         </button>
       </div>
     );
@@ -134,9 +136,9 @@ export const SubscriptionForm: React.FC<Props> = ({ currentCoords }) => {
              <Smartphone className="w-6 h-6 text-rose-600 dark:text-rose-400" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Get Daily SMS Alerts</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('subscribeTitle')}</h3>
             <p className="text-slate-500 dark:text-slate-400 mt-1">
-              Don't miss a timing. Receive precise Rahu Kaal timings for your location directly to your phone every morning.
+              {t('subscribeDesc')}
             </p>
           </div>
         </div>
@@ -145,7 +147,7 @@ export const SubscriptionForm: React.FC<Props> = ({ currentCoords }) => {
           <div className="grid md:grid-cols-2 gap-5">
             <div className="space-y-1.5">
               <label htmlFor="name" className="text-sm font-medium text-slate-700 dark:text-slate-300 ml-1">
-                Full Name
+                {t('fullName')}
               </label>
               <div className="relative group">
                 <User className={getIconClassName(!!(errors.name && touched.name))} />
@@ -170,7 +172,7 @@ export const SubscriptionForm: React.FC<Props> = ({ currentCoords }) => {
 
             <div className="space-y-1.5">
               <label htmlFor="phone" className="text-sm font-medium text-slate-700 dark:text-slate-300 ml-1">
-                Phone Number
+                {t('phoneNumber')}
               </label>
               <div className="relative group">
                 <Smartphone className={getIconClassName(!!(errors.phone && touched.phone))} />
@@ -197,7 +199,7 @@ export const SubscriptionForm: React.FC<Props> = ({ currentCoords }) => {
           <div className="pt-2">
             <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-4 px-1">
               <MapPin className="w-3 h-3 text-slate-400" />
-              <span>Registering for: <span className="font-medium text-slate-700 dark:text-slate-300">{currentCoords.label || 'Current Location'}</span></span>
+              <span>{t('registeringFor')} <span className="font-medium text-slate-700 dark:text-slate-300">{currentCoords.label || t('currentLocation')}</span></span>
             </div>
 
             <button
@@ -208,12 +210,12 @@ export const SubscriptionForm: React.FC<Props> = ({ currentCoords }) => {
               {status === 'LOADING' ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Subscribing...
+                  {t('subscribing')}
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  Subscribe Now
+                  {t('subscribeBtn')}
                 </>
               )}
             </button>

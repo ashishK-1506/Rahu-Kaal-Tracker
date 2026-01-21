@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Coordinates, CitySearchResult } from '../types';
 import { getCityName, searchCities } from '../services/api';
 import { MapPin, Navigation, Search, Loader2, X } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Props {
   currentCoords: Coordinates;
@@ -10,6 +10,7 @@ interface Props {
 }
 
 export const LocationControl: React.FC<Props> = ({ currentCoords, onLocationChange }) => {
+  const { t } = useLanguage();
   const [isSearching, setIsSearching] = useState(false);
   const [locLoading, setLocLoading] = useState(false);
 
@@ -94,7 +95,7 @@ export const LocationControl: React.FC<Props> = ({ currentCoords, onLocationChan
             <MapPin className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div className="overflow-hidden">
-            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Current Location</div>
+            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('currentLocation')}</div>
             <div className="font-medium text-slate-900 dark:text-white flex items-center gap-2 truncate">
                {locLoading && <Loader2 className="w-3 h-3 animate-spin"/>}
                <span className="truncate">{currentCoords.label || `${currentCoords.lat.toFixed(4)}, ${currentCoords.lng.toFixed(4)}`}</span>
@@ -110,7 +111,7 @@ export const LocationControl: React.FC<Props> = ({ currentCoords, onLocationChan
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
                     <input 
                         type="text" 
-                        placeholder="Search city..." 
+                        placeholder={t('locationPlaceholder')}
                         autoFocus
                         value={query} 
                         onChange={handleSearchInput}
@@ -143,7 +144,7 @@ export const LocationControl: React.FC<Props> = ({ currentCoords, onLocationChan
                )}
                {query.length >= 3 && !searchLoading && results.length === 0 && (
                    <div className="absolute z-50 top-full mt-2 left-0 w-full bg-white dark:bg-slate-800 p-2 text-sm text-slate-500 text-center border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl">
-                       No results found
+                       {t('noResults')}
                    </div>
                )}
             </div>
@@ -155,7 +156,7 @@ export const LocationControl: React.FC<Props> = ({ currentCoords, onLocationChan
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
               >
                 {locLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : <Navigation className="w-4 h-4" />}
-                <span>Detect</span>
+                <span>{t('locationDetect')}</span>
               </button>
               <button 
                 onClick={() => {
@@ -166,7 +167,7 @@ export const LocationControl: React.FC<Props> = ({ currentCoords, onLocationChan
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium transition-colors"
               >
                 <Search className="w-4 h-4" />
-                <span>Search City</span>
+                <span>{t('locationSearch')}</span>
               </button>
             </>
           )}

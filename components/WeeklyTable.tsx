@@ -1,6 +1,7 @@
 import React from 'react';
 import { DailyData } from '../types';
 import { Calendar, ChevronDown, Loader2 } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Props {
   forecast: DailyData[];
@@ -15,15 +16,17 @@ export const WeeklyTable: React.FC<Props> = ({
   isLoadingMore = false, 
   hasMore = false 
 }) => {
+  const { t, language } = useLanguage();
+
   const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(language === 'hi' ? 'hi-IN' : 'en-US', {
       hour: 'numeric',
       minute: '2-digit',
     }).format(date);
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(language === 'hi' ? 'hi-IN' : 'en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -36,8 +39,8 @@ export const WeeklyTable: React.FC<Props> = ({
     <div className="mt-8 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
       <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Upcoming Timings</h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Plan your important activities ahead.</p>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('upcomingTimings')}</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t('planAhead')}</p>
         </div>
         <Calendar className="w-5 h-5 text-indigo-500 opacity-50" />
       </div>
@@ -45,9 +48,9 @@ export const WeeklyTable: React.FC<Props> = ({
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 font-medium">
             <tr>
-              <th className="px-6 py-4 whitespace-nowrap">Date</th>
-              <th className="px-6 py-4 whitespace-nowrap">Rahu Kaal Time</th>
-              <th className="px-6 py-4 hidden sm:table-cell whitespace-nowrap">Duration</th>
+              <th className="px-6 py-4 whitespace-nowrap">{t('date')}</th>
+              <th className="px-6 py-4 whitespace-nowrap">{t('time')}</th>
+              <th className="px-6 py-4 hidden sm:table-cell whitespace-nowrap">{t('duration')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -69,14 +72,14 @@ export const WeeklyTable: React.FC<Props> = ({
                   <tr key={day.date.toISOString()} className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${isToday ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`block font-medium ${isToday ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'}`}>
-                        {isToday ? 'Today' : formatDate(day.date)}
+                        {isToday ? t('today') : formatDate(day.date)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">
                       {formatTime(day.rahu.start)} - {formatTime(day.rahu.end)}
                     </td>
                     <td className="px-6 py-4 hidden sm:table-cell text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                      {duration} min
+                      {duration} {t('min')}
                     </td>
                   </tr>
                 );
@@ -99,7 +102,7 @@ export const WeeklyTable: React.FC<Props> = ({
             ) : (
               <ChevronDown className="w-4 h-4" />
             )}
-            {isLoadingMore ? 'Loading...' : 'Load Next 7 Days'}
+            {isLoadingMore ? t('loading') : t('loadMore')}
           </button>
         </div>
       )}

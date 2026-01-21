@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { DailyData } from '../types';
 import { AlertTriangle, Moon, Sun, Clock, CheckCircle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Props {
   data?: DailyData | null;
@@ -8,6 +9,8 @@ interface Props {
 }
 
 export const CurrentRahu: React.FC<Props> = ({ data, isLoading = false }) => {
+  const { t, language } = useLanguage();
+
   const getStatus = (d: DailyData) => {
     const now = new Date();
     if (now < d.rahu.start) return 'UPCOMING';
@@ -21,13 +24,13 @@ export const CurrentRahu: React.FC<Props> = ({ data, isLoading = false }) => {
       const diff = d.rahu.start.getTime() - now.getTime();
       const hrs = Math.floor(diff / (1000 * 60 * 60));
       const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      return `Starts in ${hrs > 0 ? `${hrs}h ` : ''}${mins}m`;
+      return `${t('startsIn')} ${hrs > 0 ? `${hrs}h ` : ''}${mins}m`;
     } else if (currentStatus === 'ACTIVE') {
       const diff = d.rahu.end.getTime() - now.getTime();
       const mins = Math.floor(diff / (1000 * 60));
-      return `Ends in ${mins}m`;
+      return `${t('endsIn')} ${mins}m`;
     } else {
-      return 'Completed for today';
+      return t('completed');
     }
   };
 
@@ -44,10 +47,10 @@ export const CurrentRahu: React.FC<Props> = ({ data, isLoading = false }) => {
     update();
     const timer = setInterval(update, 1000);
     return () => clearInterval(timer);
-  }, [data, isLoading]);
+  }, [data, isLoading, language]); // Added language dep
 
   const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(language === 'hi' ? 'hi-IN' : 'en-US', {
       hour: 'numeric',
       minute: '2-digit',
     }).format(date);
@@ -64,7 +67,7 @@ export const CurrentRahu: React.FC<Props> = ({ data, isLoading = false }) => {
 
   return (
     <div className={containerClasses}>
-      {/* Background Decor - Always present to avoid shift */}
+      {/* Background Decor */}
       <div className={`absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl transition-colors duration-500 ${
          !isLoading && isActive ? 'bg-orange-500/20' : 'bg-purple-500/20 opacity-50'
       }`}></div>
@@ -75,7 +78,7 @@ export const CurrentRahu: React.FC<Props> = ({ data, isLoading = false }) => {
 
       <div className="relative z-10 flex flex-col items-center text-center w-full">
         
-        {/* Status Badge Container - Fixed height */}
+        {/* Status Badge Container */}
         <div className="h-8 mb-4 flex items-center justify-center w-full">
           {isLoading ? (
              <div className="h-8 w-32 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
@@ -84,18 +87,18 @@ export const CurrentRahu: React.FC<Props> = ({ data, isLoading = false }) => {
               {status === 'ACTIVE' && (
                 <div className="animate-pulse flex items-center gap-2 bg-red-500/20 px-4 py-1 rounded-full text-red-200 text-sm font-bold uppercase tracking-wider border border-red-500/30">
                   <AlertTriangle className="w-4 h-4" />
-                  Rahu Kaal Active
+                  {t('rahuActive')}
                 </div>
               )}
               {status === 'UPCOMING' && (
                 <div className="flex items-center gap-2 bg-emerald-500/10 dark:bg-emerald-500/20 px-4 py-1 rounded-full text-emerald-700 dark:text-emerald-300 text-sm font-bold uppercase tracking-wider border border-emerald-500/30">
-                  Safe Period
+                  {t('safePeriod')}
                 </div>
               )}
               {status === 'PASSED' && (
                 <div className="flex items-center gap-2 bg-emerald-500/10 dark:bg-emerald-500/20 px-4 py-1 rounded-full text-emerald-700 dark:text-emerald-300 text-sm font-bold uppercase tracking-wider border border-emerald-500/30">
                   <CheckCircle className="w-4 h-4" />
-                  Rahu Kaal Passed
+                  {t('rahuPassed')}
                 </div>
               )}
             </>
@@ -106,10 +109,10 @@ export const CurrentRahu: React.FC<Props> = ({ data, isLoading = false }) => {
         {isLoading ? (
           <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-4 animate-pulse"></div>
         ) : (
-          <h2 className="text-lg font-medium opacity-80 mb-1">Today's Rahu Kaal</h2>
+          <h2 className="text-lg font-medium opacity-80 mb-1">{t('todayRahu')}</h2>
         )}
         
-        {/* Main Time Display - Fixed Min Height for font stability */}
+        {/* Main Time Display */}
         <div className="min-h-[60px] flex items-center justify-center mb-2">
            {isLoading ? (
               <div className="h-12 w-64 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
@@ -122,7 +125,7 @@ export const CurrentRahu: React.FC<Props> = ({ data, isLoading = false }) => {
            ) : null}
         </div>
         
-        {/* Time Left - Fixed height */}
+        {/* Time Left */}
         <div className="flex items-center justify-center h-6 mt-2 mb-8 w-full">
            {isLoading ? (
              <div className="h-5 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
@@ -145,12 +148,12 @@ export const CurrentRahu: React.FC<Props> = ({ data, isLoading = false }) => {
              <>
                <div className={`flex flex-col items-center p-3 rounded-xl transition-colors ${isActive ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-100 dark:bg-slate-700/50'}`}>
                  <Sun className={`w-5 h-5 mb-1 ${isActive ? 'text-amber-500' : 'text-amber-500'}`} />
-                 <span className={`text-xs ${isActive ? 'text-slate-500' : 'opacity-60'}`}>Sunrise</span>
+                 <span className={`text-xs ${isActive ? 'text-slate-500' : 'opacity-60'}`}>{t('sunrise')}</span>
                  <span className="font-semibold">{formatTime(data.sunrise)}</span>
                </div>
                <div className={`flex flex-col items-center p-3 rounded-xl transition-colors ${isActive ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-100 dark:bg-slate-700/50'}`}>
                  <Moon className={`w-5 h-5 mb-1 ${isActive ? 'text-indigo-600' : 'text-indigo-400'}`} />
-                 <span className={`text-xs ${isActive ? 'text-slate-500' : 'opacity-60'}`}>Sunset</span>
+                 <span className={`text-xs ${isActive ? 'text-slate-500' : 'opacity-60'}`}>{t('sunset')}</span>
                  <span className="font-semibold">{formatTime(data.sunset)}</span>
                </div>
              </>

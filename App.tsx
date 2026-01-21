@@ -8,8 +8,9 @@ import { AboutSection } from './components/AboutSection';
 import { AdContainer } from './components/AdContainer';
 import { SubscriptionForm } from './components/SubscriptionForm';
 import { requestNotificationPermission, scheduleNotification, sendTestNotification } from './services/notificationService';
-import { Bell, BellRing, Info, Loader2, Sun, Moon } from 'lucide-react';
+import { Bell, BellRing, Info, Loader2, Sun, Moon, Languages } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
+import { useLanguage } from './contexts/LanguageContext';
 
 // Helper to handle Date serialization in localStorage
 const serializeData = (data: DailyData[]) => JSON.stringify(data);
@@ -34,6 +35,8 @@ const deserializeData = (json: string): DailyData[] => {
 };
 
 function App() {
+  const { t, language, setLanguage } = useLanguage();
+  
   const [coords, setCoords] = useState<Coordinates>(() => {
     const saved = localStorage.getItem('user_coords');
     return saved ? JSON.parse(saved) : { lat: 28.6139, lng: 77.2090, label: 'New Delhi (Default)' };
@@ -199,30 +202,40 @@ function App() {
         <header role="banner" className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
           <div>
             <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
-              Rahu Kaal Tracker
+              {t('appTitle')}
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">Vedic Astrology Timing Guide</p>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">{t('appSubtitle')}</p>
           </div>
           <div className="flex items-center gap-3">
-             <button onClick={toggleTheme} className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm" aria-label="Toggle theme">
+             <button
+               onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
+               className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm flex items-center gap-1.5 px-3"
+               aria-label="Toggle language"
+             >
+               <Languages className="w-4 h-4" />
+               <span className="text-sm font-medium">{t('langToggle')}</span>
+             </button>
+
+             <button onClick={toggleTheme} className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm" aria-label={t('themeToggle')}>
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
              {notifPermission === 'granted' ? (
                  <div className="flex items-center gap-2 pl-4 pr-2 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-medium transition-colors border border-green-200 dark:border-green-900">
                     <BellRing className="w-4 h-4" />
+                    <span className="hidden sm:inline">{t('alertLabel')}</span>
                     <select value={alertOffset} onChange={handleOffsetChange} className="bg-transparent border-none outline-none font-bold cursor-pointer text-green-800 dark:text-green-200">
-                      <option value="0">At Start</option>
-                      <option value="5">5m before</option>
-                      <option value="10">10m before</option>
-                      <option value="15">15m before</option>
-                      <option value="30">30m before</option>
-                      <option value="60">1h before</option>
+                      <option value="0">{t('atStart')}</option>
+                      <option value="5">5{t('minBefore')}</option>
+                      <option value="10">10{t('minBefore')}</option>
+                      <option value="15">15{t('minBefore')}</option>
+                      <option value="30">30{t('minBefore')}</option>
+                      <option value="60">1{t('hourBefore')}</option>
                     </select>
                  </div>
              ) : (
                 <button onClick={enableNotifications} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-sm font-medium shadow-lg transition-all">
                   <Bell className="w-4 h-4" />
-                  <span>Enable Daily Alerts</span>
+                  <span>{t('enableAlerts')}</span>
                 </button>
              )}
           </div>
@@ -232,7 +245,7 @@ function App() {
 
         {loading === LoadingState.ERROR && !dailyData ? (
            <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-2xl text-center">
-              Failed to load solar data. Please check your connection.
+              {t('errorSolar')}
            </div>
         ) : (
           <main role="main" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -241,8 +254,8 @@ function App() {
             <div className="bg-indigo-50 dark:bg-slate-900 p-6 rounded-2xl border border-indigo-100 dark:border-slate-800 flex gap-4">
               <Info className="w-6 h-6 text-indigo-500 shrink-0 mt-1" />
               <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2">
-                <h2 className="font-bold text-slate-900 dark:text-white text-base">What is Rahu Kaal?</h2>
-                <p><strong>Rahu Kaal</strong> is a period considered inauspicious in Vedic Astrology for starting new ventures. It is calculated daily based on local sunrise and sunset.</p>
+                <h2 className="font-bold text-slate-900 dark:text-white text-base">{t('infoTitle')}</h2>
+                <p>{t('infoDesc')}</p>
               </div>
             </div>
             <WeeklyTable forecast={forecast} onLoadMore={handleLoadMore} isLoadingMore={loadingMore} hasMore={hasMore} />
@@ -253,8 +266,8 @@ function App() {
         )}
         
         <footer role="contentinfo" className="text-center text-slate-400 text-sm py-8">
-           <p>© {new Date().getFullYear()} Rahu Kaal Tracker.</p>
-           <p className="text-xs mt-1">Timings are cached locally for offline access and speed.</p>
+           <p>© {new Date().getFullYear()} {t('copy')}.</p>
+           <p className="text-xs mt-1">{t('footerText')}</p>
         </footer>
       </div>
       <Analytics />
