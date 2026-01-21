@@ -95,18 +95,16 @@ function App() {
     const cacheKey = `rahu_forecast_${coords.lat.toFixed(3)}_${coords.lng.toFixed(3)}`;
 
     async function loadData() {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
       const todayStr = new Date().toDateString();
       
       // 1. Check Cache First
       const cachedJson = localStorage.getItem(cacheKey);
       if (cachedJson) {
         const cachedData = deserializeData(cachedJson);
-        // Filter out past dates
-        const validForecast = cachedData.filter(d => {
-          const dCopy = new Date(d.date);
-          dCopy.setHours(23, 59, 59, 999);
-          return dCopy >= new Date();
-        });
+        // Filter out past dates (keep today and future)
+        const validForecast = cachedData.filter(d => d.date >= todayStart);
 
         // If we have "Today" in the cache, load it immediately!
         const hasToday = validForecast.some(d => d.date.toDateString() === todayStr);
@@ -116,14 +114,16 @@ function App() {
           setForecast(validForecast);
           setLoading(LoadingState.SUCCESS);
           
-          // If we have enough forecast data, we can skip fetching entirely
-          if (validForecast.length >= 7) return; 
+          // If we have data, we can stop here. The cache is valid.
+          return; 
         }
       }
 
       // 2. Fetch if Cache is missing or insufficient
-      if (isMounted && !dailyData) {
+      if (isMounted) {
         setLoading(LoadingState.LOADING);
+        // Reset only if we didn't load from cache (to avoid flashing if partial data existed)
+        if (!dailyData) setDailyData(null); 
       }
 
       try {
@@ -154,8 +154,10 @@ function App() {
       const lastItem = forecast[forecast.length - 1];
       const startDate = new Date(lastItem.date);
       startDate.setDate(startDate.getDate() + 1);
+      
       const newBatch = await getForecastBatch(coords, startDate, 7);
       const updatedForecast = [...forecast, ...newBatch];
+      
       setForecast(updatedForecast);
       
       // Update cache with the expanded forecast
