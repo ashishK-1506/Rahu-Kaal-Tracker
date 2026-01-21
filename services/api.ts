@@ -141,16 +141,18 @@ export async function getRahuKaal(coords: Coordinates, date: Date = new Date()):
   };
 }
 
-// Get forecast for the next 7 days (including today)
-export async function getWeeklyForecast(coords: Coordinates): Promise<DailyData[]> {
-  const today = new Date();
+// Fetch forecast for a specific batch of days
+export async function getForecastBatch(coords: Coordinates, startDate: Date, days: number): Promise<DailyData[]> {
   const promises: Promise<DailyData>[] = [];
-
-  for (let i = 0; i < 7; i++) {
-    const nextDate = new Date(today);
-    nextDate.setDate(today.getDate() + i);
+  for (let i = 0; i < days; i++) {
+    const nextDate = new Date(startDate);
+    nextDate.setDate(startDate.getDate() + i);
     promises.push(getRahuKaal(coords, nextDate));
   }
-
   return Promise.all(promises);
+}
+
+// Get forecast for the next 7 days (including today) - Wrapper for backward compatibility
+export async function getWeeklyForecast(coords: Coordinates): Promise<DailyData[]> {
+  return getForecastBatch(coords, new Date(), 7);
 }

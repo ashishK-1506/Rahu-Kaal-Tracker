@@ -1,11 +1,20 @@
 import React from 'react';
 import { DailyData } from '../types';
+import { Calendar, ChevronDown, Loader2 } from 'lucide-react';
 
 interface Props {
   forecast: DailyData[];
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
+  hasMore?: boolean;
 }
 
-export const WeeklyTable: React.FC<Props> = ({ forecast }) => {
+export const WeeklyTable: React.FC<Props> = ({ 
+  forecast, 
+  onLoadMore, 
+  isLoadingMore = false, 
+  hasMore = false 
+}) => {
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       hour: 'numeric',
@@ -25,9 +34,12 @@ export const WeeklyTable: React.FC<Props> = ({ forecast }) => {
 
   return (
     <div className="mt-8 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-      <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Upcoming 7 Days</h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400">Plan your important activities ahead.</p>
+      <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Upcoming Timings</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Plan your important activities ahead.</p>
+        </div>
+        <Calendar className="w-5 h-5 text-indigo-500 opacity-50" />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
@@ -50,7 +62,7 @@ export const WeeklyTable: React.FC<Props> = ({ forecast }) => {
                ))
             ) : (
               forecast.map((day, idx) => {
-                const isToday = idx === 0;
+                const isToday = day.date.toDateString() === new Date().toDateString();
                 const duration = Math.round((day.rahu.end.getTime() - day.rahu.start.getTime()) / 60000);
                 
                 return (
@@ -73,6 +85,24 @@ export const WeeklyTable: React.FC<Props> = ({ forecast }) => {
           </tbody>
         </table>
       </div>
+      
+      {/* Load More Button Area */}
+      {hasMore && !isLoading && (
+        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 flex justify-center">
+          <button
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 transition-all text-sm font-medium shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isLoadingMore ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+            {isLoadingMore ? 'Loading...' : 'Load Next 7 Days'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
