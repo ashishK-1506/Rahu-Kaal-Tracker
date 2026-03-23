@@ -48,9 +48,9 @@ export const WeeklyTable: React.FC<Props> = ({
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 font-medium">
             <tr>
-              <th className="px-6 py-4 whitespace-nowrap">{t('date')}</th>
-              <th className="px-6 py-4 whitespace-nowrap">{t('time')}</th>
-              <th className="px-6 py-4 hidden sm:table-cell whitespace-nowrap">{t('duration')}</th>
+              <th scope="col" className="px-6 py-4 whitespace-nowrap">{t('date')}</th>
+              <th scope="col" className="px-6 py-4 whitespace-nowrap">{t('time')}</th>
+              <th scope="col" className="px-6 py-4 hidden sm:table-cell whitespace-nowrap">{t('duration')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -72,7 +72,7 @@ export const WeeklyTable: React.FC<Props> = ({
                   <tr key={day.date.toISOString()} className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${isToday ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`block font-medium ${isToday ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'}`}>
-                        {isToday ? t('today') : formatDate(day.date)}
+                        {isToday ? `${t('today')} (${formatDate(day.date)})` : formatDate(day.date)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">
@@ -90,19 +90,34 @@ export const WeeklyTable: React.FC<Props> = ({
       </div>
       
       {/* Load More Button Area */}
-      {hasMore && !isLoading && (
+      {!isLoading && (
         <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 flex justify-center">
           <button
             onClick={onLoadMore}
-            disabled={isLoadingMore}
+            disabled={isLoadingMore || !hasMore}
             className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 transition-all text-sm font-medium shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoadingMore ? (
               <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
+            ) : hasMore ? (
               <ChevronDown className="w-4 h-4" />
-            )}
-            {isLoadingMore ? t('loading') : t('loadMore')}
+            ) : null}
+            {isLoadingMore 
+              ? t('loading') 
+              : !hasMore 
+                ? (language === 'hi' ? 'सभी उपलब्ध डेटा लोड हो गया' : 'All available data loaded')
+                : (() => {
+                    if (!forecast || forecast.length === 0) return t('loadMore');
+                    const lastDate = forecast[forecast.length - 1].date;
+                    const nextStart = new Date(lastDate);
+                    nextStart.setDate(nextStart.getDate() + 1);
+                    const nextEnd = new Date(nextStart);
+                    nextEnd.setDate(nextEnd.getDate() + 6);
+                    const formatShortDate = (date: Date) => new Intl.DateTimeFormat(language === 'hi' ? 'hi-IN' : 'en-US', { month: 'short', day: 'numeric' }).format(date);
+                    const dateStr = `${formatShortDate(nextStart)} – ${formatShortDate(nextEnd)}`;
+                    return language === 'hi' ? `${dateStr} लोड करें` : `Load ${dateStr}`;
+                  })()
+            }
           </button>
         </div>
       )}

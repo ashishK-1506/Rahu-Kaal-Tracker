@@ -4,6 +4,7 @@ const SERVICE_WORKER_CACHE_NAME = 'rahu-tracker-v1';
 const SERVICE_WORKER_ASSETS = [
   '/',
   '/index.html',
+  '/rahu-coin.png'
   // In a built React app, main.js/chunk.js would be here. 
   // For this generated code block, we just ensure the SW exists for PWA criteria.
 ];
@@ -31,8 +32,8 @@ self.addEventListener('push', (event: any) => {
   const title = data.title || 'Rahu Kaal Update';
   const options = {
     body: data.body || 'Check the app for today\'s timings.',
-    icon: '/icon.png',
-    badge: '/badge.png'
+    icon: '/rahu-coin.png',
+    badge: '/rahu-coin.png'
   };
 
   event.waitUntil(

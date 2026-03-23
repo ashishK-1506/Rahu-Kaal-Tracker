@@ -2,6 +2,7 @@ const CACHE_NAME = 'rahu-tracker-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
+  './rahu-coin.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -31,8 +32,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Rahu Kaal Update';
   const options = {
     body: data.body || 'Check the app for timings.',
-    icon: 'https://cdn-icons-png.flaticon.com/512/2693/2693507.png',
-    badge: 'https://cdn-icons-png.flaticon.com/512/2693/2693507.png',
+    icon: '/rahu-coin.png',
+    badge: '/rahu-coin.png',
     tag: 'rahu-notification'
   };
 

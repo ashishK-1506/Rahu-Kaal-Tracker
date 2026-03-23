@@ -8,7 +8,7 @@ import { AboutSection } from './components/AboutSection';
 import { AdContainer } from './components/AdContainer';
 import { SubscriptionForm } from './components/SubscriptionForm';
 import { requestNotificationPermission, scheduleNotification, sendTestNotification } from './services/notificationService';
-import { Bell, BellRing, Info, Loader2, Sun, Moon, Languages } from 'lucide-react';
+import { Bell, BellRing, Info, Loader2, Sun, Moon, Languages, ArrowUp } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { useLanguage } from './contexts/LanguageContext';
 
@@ -62,6 +62,21 @@ function App() {
     if (saved) return saved;
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
+
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowBackToTop(true);
+      } else {
+        setShowBackToTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (theme === 'dark') document.documentElement.classList.add('dark');
@@ -196,8 +211,15 @@ function App() {
   const isLoading = loading === LoadingState.LOADING && !dailyData;
   const hasMore = forecast.length < MAX_DAYS && forecast.length > 0;
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8 transition-colors duration-300">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-black dark:focus:bg-slate-900 dark:focus:text-white rounded-md">
+        Skip to content
+      </a>
       <div className="max-w-4xl mx-auto space-y-6">
         <header role="banner" className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
           <div>
@@ -241,35 +263,61 @@ function App() {
           </div>
         </header>
 
-        <LocationControl currentCoords={coords} onLocationChange={handleLocationChange} />
+        <nav aria-label="Location selector">
+          <LocationControl currentCoords={coords} onLocationChange={handleLocationChange} />
+        </nav>
 
-        {loading === LoadingState.ERROR && !dailyData ? (
-           <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-2xl text-center">
-              {t('errorSolar')}
-           </div>
-        ) : (
-          <main role="main" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <CurrentRahu data={dailyData} isLoading={isLoading} />
-            <AdContainer slotId="YOUR_SLOT_ID_1" />
-            <div className="bg-indigo-50 dark:bg-slate-900 p-6 rounded-2xl border border-indigo-100 dark:border-slate-800 flex gap-4">
-              <Info className="w-6 h-6 text-indigo-500 shrink-0 mt-1" />
-              <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2">
-                <h2 className="font-bold text-slate-900 dark:text-white text-base">{t('infoTitle')}</h2>
-                <p>{t('infoDesc')}</p>
+        <main id="main-content" role="main" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          {loading === LoadingState.ERROR && !dailyData ? (
+             <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-2xl text-center">
+                {t('errorSolar')}
+             </div>
+          ) : (
+            <>
+              <CurrentRahu data={dailyData} isLoading={isLoading} />
+              <AdContainer slotId="YOUR_SLOT_ID_1" />
+              <div className="bg-indigo-50 dark:bg-slate-900 p-6 rounded-2xl border border-indigo-100 dark:border-slate-800 flex gap-4">
+                <Info className="w-6 h-6 text-indigo-500 shrink-0 mt-1" />
+                <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2 w-full">
+                  <h2 className="font-bold text-slate-900 dark:text-white text-base">{t('infoTitle')}</h2>
+                  <div className={`relative ${!isInfoExpanded ? 'max-h-20 overflow-hidden' : ''}`}>
+                    <p className="leading-relaxed">{t('infoDesc')}</p>
+                    {!isInfoExpanded && (
+                      <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-indigo-50 dark:from-slate-900 to-transparent pointer-events-none" />
+                    )}
+                  </div>
+                  <button 
+                    onClick={() => setIsInfoExpanded(!isInfoExpanded)}
+                    className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline focus:outline-none text-sm mt-1"
+                  >
+                    {isInfoExpanded ? t('readLess') || 'Read less' : t('readMore') || 'Read more'}
+                  </button>
+                </div>
               </div>
-            </div>
-            <WeeklyTable forecast={forecast} onLoadMore={handleLoadMore} isLoadingMore={loadingMore} hasMore={hasMore} />
-            <SubscriptionForm currentCoords={coords} />
-            <AdContainer slotId="YOUR_SLOT_ID_2" />
-            <AboutSection />
-          </main>
-        )}
+              <WeeklyTable forecast={forecast} onLoadMore={handleLoadMore} isLoadingMore={loadingMore} hasMore={hasMore} />
+              <SubscriptionForm currentCoords={coords} />
+              <AdContainer slotId="YOUR_SLOT_ID_2" />
+              <AboutSection />
+            </>
+          )}
+        </main>
         
         <footer role="contentinfo" className="text-center text-slate-400 text-sm py-8">
-           <p>© {new Date().getFullYear()} {t('copy')}.</p>
+           <p>© {new Date().getFullYear()} Rahu Kaal Tracker. All rights reserved.</p>
            <p className="text-xs mt-1">{t('footerText')}</p>
         </footer>
       </div>
+      
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg transition-all z-50 animate-in fade-in slide-in-from-bottom-4"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
+      
       <Analytics />
     </div>
   );

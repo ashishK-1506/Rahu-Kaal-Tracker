@@ -43,7 +43,7 @@ export function scheduleNotification(rahu: RahuTime, alertOffsetMinutes: number 
     scheduledTimeoutId = window.setTimeout(() => {
       new Notification(title, {
         body: body,
-        icon: 'https://cdn-icons-png.flaticon.com/512/2693/2693507.png',
+        icon: '/rahu-coin.png',
         tag: 'rahu-alert' // unique tag replaces previous notification with same tag
       });
     }, timeUntilAlert);
@@ -56,7 +56,7 @@ export function sendTestNotification() {
     if (Notification.permission === 'granted') {
         new Notification('Test Alert', {
             body: 'This is how your Rahu Kaal alerts will look.',
-            icon: 'https://cdn-icons-png.flaticon.com/512/2693/2693507.png',
+            icon: '/rahu-coin.png',
         });
     }
 }
