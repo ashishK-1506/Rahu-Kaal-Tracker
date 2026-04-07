@@ -4,6 +4,7 @@ import { Coordinates, DailyData, LoadingState } from './types';
 import { CurrentRahu } from './components/CurrentRahu';
 import { WeeklyTable } from './components/WeeklyTable';
 import { LocationControl } from './components/LocationControl';
+import { PopularCities } from './components/PopularCities';
 import { AboutSection } from './components/AboutSection';
 import { AdContainer } from './components/AdContainer';
 import { SubscriptionForm } from './components/SubscriptionForm';
@@ -27,7 +28,19 @@ const deserializeData = (json: string): DailyData[] => {
         start: new Date(item.rahu.start),
         end: new Date(item.rahu.end),
         date: new Date(item.rahu.date),
-      }
+      },
+      yamagandam: item.yamagandam ? {
+        ...item.yamagandam,
+        start: new Date(item.yamagandam.start),
+        end: new Date(item.yamagandam.end),
+        date: new Date(item.yamagandam.date),
+      } : undefined,
+      gulika: item.gulika ? {
+        ...item.gulika,
+        start: new Date(item.gulika.start),
+        end: new Date(item.gulika.end),
+        date: new Date(item.gulika.date),
+      } : undefined,
     }));
   } catch (e) {
     return [];
@@ -197,6 +210,7 @@ function App() {
   const handleLocationChange = (newCoords: Coordinates) => {
     setCoords(newCoords);
     localStorage.setItem('user_coords', JSON.stringify(newCoords));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const enableNotifications = async () => {
@@ -295,6 +309,7 @@ function App() {
                 </div>
               </div>
               <WeeklyTable forecast={forecast} onLoadMore={handleLoadMore} isLoadingMore={loadingMore} hasMore={hasMore} />
+              <PopularCities onCitySelect={handleLocationChange} />
               <SubscriptionForm currentCoords={coords} />
               <AdContainer slotId="YOUR_SLOT_ID_2" />
               <AboutSection />

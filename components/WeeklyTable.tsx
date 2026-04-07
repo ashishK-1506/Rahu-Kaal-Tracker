@@ -49,8 +49,9 @@ export const WeeklyTable: React.FC<Props> = ({
           <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 font-medium">
             <tr>
               <th scope="col" className="px-6 py-4 whitespace-nowrap">{t('date')}</th>
-              <th scope="col" className="px-6 py-4 whitespace-nowrap">{t('time')}</th>
-              <th scope="col" className="px-6 py-4 hidden sm:table-cell whitespace-nowrap">{t('duration')}</th>
+              <th scope="col" className="px-6 py-4 whitespace-nowrap text-red-600 dark:text-red-400">{t('rahuKaal')}</th>
+              <th scope="col" className="px-6 py-4 whitespace-nowrap text-orange-600 dark:text-orange-400">{t('yamagandam')}</th>
+              <th scope="col" className="px-6 py-4 whitespace-nowrap text-yellow-600 dark:text-yellow-400">{t('gulika')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -59,14 +60,14 @@ export const WeeklyTable: React.FC<Props> = ({
                Array.from({ length: 7 }).map((_, i) => (
                  <tr key={i} className="animate-pulse">
                    <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24"></div></td>
-                   <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-32"></div></td>
-                   <td className="px-6 py-4 hidden sm:table-cell"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-12"></div></td>
+                   <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24"></div></td>
+                   <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24"></div></td>
+                   <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24"></div></td>
                  </tr>
                ))
             ) : (
               forecast.map((day, idx) => {
                 const isToday = day.date.toDateString() === new Date().toDateString();
-                const duration = Math.round((day.rahu.end.getTime() - day.rahu.start.getTime()) / 60000);
                 
                 return (
                   <tr key={day.date.toISOString()} className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${isToday ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>
@@ -78,8 +79,11 @@ export const WeeklyTable: React.FC<Props> = ({
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">
                       {formatTime(day.rahu.start)} - {formatTime(day.rahu.end)}
                     </td>
-                    <td className="px-6 py-4 hidden sm:table-cell text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                      {duration} {t('min')}
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">
+                      {day.yamagandam ? `${formatTime(day.yamagandam.start)} - ${formatTime(day.yamagandam.end)}` : '-'}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">
+                      {day.gulika ? `${formatTime(day.gulika.start)} - ${formatTime(day.gulika.end)}` : '-'}
                     </td>
                   </tr>
                 );

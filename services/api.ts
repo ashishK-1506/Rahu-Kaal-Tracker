@@ -9,6 +9,8 @@ import { Coordinates, DailyData, RahuTime, CitySearchResult } from '../types';
 // Friday: 4th segment (Index 3)
 // Saturday: 3rd segment (Index 2)
 const RAHU_SEGMENTS = [7, 1, 6, 4, 5, 3, 2];
+const YAMAGANDAM_SEGMENTS = [4, 3, 2, 1, 0, 6, 5];
+const GULIKA_SEGMENTS = [6, 5, 4, 3, 2, 1, 0];
 
 // Simple in-memory cache fallback if localStorage fails
 const memoryCache: Record<string, { sunrise: string; sunset: string }> = {};
@@ -124,10 +126,18 @@ export async function getRahuKaal(coords: Coordinates, date: Date = new Date()):
   const segmentDuration = dayDuration / 8;
 
   const dayOfWeek = date.getDay(); // 0 (Sun) - 6 (Sat)
-  const segmentIndex = RAHU_SEGMENTS[dayOfWeek];
+  const rahuSegmentIndex = RAHU_SEGMENTS[dayOfWeek];
+  const yamaSegmentIndex = YAMAGANDAM_SEGMENTS[dayOfWeek];
+  const gulikaSegmentIndex = GULIKA_SEGMENTS[dayOfWeek];
 
-  const rahuStartMs = sunrise.getTime() + (segmentIndex * segmentDuration);
+  const rahuStartMs = sunrise.getTime() + (rahuSegmentIndex * segmentDuration);
   const rahuEndMs = rahuStartMs + segmentDuration;
+
+  const yamaStartMs = sunrise.getTime() + (yamaSegmentIndex * segmentDuration);
+  const yamaEndMs = yamaStartMs + segmentDuration;
+
+  const gulikaStartMs = sunrise.getTime() + (gulikaSegmentIndex * segmentDuration);
+  const gulikaEndMs = gulikaStartMs + segmentDuration;
 
   return {
     date,
@@ -136,6 +146,16 @@ export async function getRahuKaal(coords: Coordinates, date: Date = new Date()):
     rahu: {
       start: new Date(rahuStartMs),
       end: new Date(rahuEndMs),
+      date,
+    },
+    yamagandam: {
+      start: new Date(yamaStartMs),
+      end: new Date(yamaEndMs),
+      date,
+    },
+    gulika: {
+      start: new Date(gulikaStartMs),
+      end: new Date(gulikaEndMs),
       date,
     },
   };

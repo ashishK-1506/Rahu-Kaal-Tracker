@@ -16,6 +16,8 @@ export interface DailyData {
   sunrise: Date;
   sunset: Date;
   rahu: RahuTime;
+  yamagandam: RahuTime;
+  gulika: RahuTime;
 }
 
 export enum LoadingState {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { DailyData } from '../types';
-import { AlertTriangle, Moon, Sun, Clock, CheckCircle } from 'lucide-react';
+import { DailyData, RahuTime } from '../types';
+import { AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface Props {
@@ -8,46 +8,56 @@ interface Props {
   isLoading?: boolean;
 }
 
-export const CurrentRahu: React.FC<Props> = ({ data, isLoading = false }) => {
-  const { t, language } = useLanguage();
-
-  const getStatus = (d: DailyData) => {
-    const now = new Date();
-    if (now < d.rahu.start) return 'UPCOMING';
-    if (now >= d.rahu.start && now <= d.rahu.end) return 'ACTIVE';
-    return 'PASSED';
-  };
-
-  const getTimeLeftString = (currentStatus: string, d: DailyData) => {
-    const now = new Date();
-    if (currentStatus === 'UPCOMING') {
-      const diff = d.rahu.start.getTime() - now.getTime();
-      const hrs = Math.floor(diff / (1000 * 60 * 60));
-      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      return `${t('startsIn')} ${hrs > 0 ? `${hrs}h ` : ''}${mins}m`;
-    } else if (currentStatus === 'ACTIVE') {
-      const diff = d.rahu.end.getTime() - now.getTime();
-      const mins = Math.floor(diff / (1000 * 60));
-      return `${t('endsIn')} ${mins}m`;
-    } else {
-      return t('completed');
-    }
-  };
-
+const TimingCard = ({ 
+  title, 
+  time, 
+  isLoading, 
+  colorClass, 
+  bgClass, 
+  activeBgClass, 
+  language,
+  t
+}: { 
+  title: string, 
+  time?: RahuTime, 
+  isLoading: boolean, 
+  colorClass: string,
+  bgClass: string,
+  activeBgClass: string,
+  language: string,
+  t: (key: string) => string
+}) => {
   const [status, setStatus] = useState<'UPCOMING' | 'ACTIVE' | 'PASSED'>('UPCOMING');
   const [timeLeft, setTimeLeft] = useState<string>('');
 
   useEffect(() => {
-    if (!data || isLoading) return;
+    if (!time || isLoading) return;
     const update = () => {
-      const newStatus = getStatus(data);
+      const now = new Date();
+      let newStatus: 'UPCOMING' | 'ACTIVE' | 'PASSED' = 'UPCOMING';
+      if (now < time.start) newStatus = 'UPCOMING';
+      else if (now >= time.start && now <= time.end) newStatus = 'ACTIVE';
+      else newStatus = 'PASSED';
+
       setStatus(newStatus);
-      setTimeLeft(getTimeLeftString(newStatus, data));
+
+      if (newStatus === 'UPCOMING') {
+        const diff = time.start.getTime() - now.getTime();
+        const hrs = Math.floor(diff / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        setTimeLeft(`${t('startsIn')} ${hrs > 0 ? `${hrs}h ` : ''}${mins}m`);
+      } else if (newStatus === 'ACTIVE') {
+        const diff = time.end.getTime() - now.getTime();
+        const mins = Math.floor(diff / (1000 * 60));
+        setTimeLeft(`${t('endsIn')} ${mins}m`);
+      } else {
+        setTimeLeft(t('completed'));
+      }
     };
     update();
     const timer = setInterval(update, 1000);
     return () => clearInterval(timer);
-  }, [data, isLoading, language]); // Added language dep
+  }, [time, isLoading, language, t]);
 
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat(language === 'hi' ? 'hi-IN' : 'en-US', {
@@ -57,109 +67,110 @@ export const CurrentRahu: React.FC<Props> = ({ data, isLoading = false }) => {
   };
 
   const isActive = status === 'ACTIVE';
-  
-  // Define base classes
-  const containerClasses = `relative overflow-hidden rounded-3xl p-8 shadow-2xl transition-all duration-500 transform translate-z-0 min-h-[400px] flex flex-col justify-center ${
+
+  const containerClasses = `relative overflow-hidden rounded-3xl p-6 shadow-lg transition-all duration-500 flex flex-col justify-center border ${
     !isLoading && isActive 
-      ? 'bg-gradient-to-br from-rose-900 via-red-900 to-orange-900 text-white border-2 border-red-500/50' 
-      : 'bg-white dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700'
+      ? `${activeBgClass} text-white border-transparent` 
+      : `bg-white dark:bg-slate-800 dark:text-white border-slate-200 dark:border-slate-700`
   }`;
 
   return (
     <div className={containerClasses}>
-      {/* Background Decor */}
-      <div className={`absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl transition-colors duration-500 ${
-         !isLoading && isActive ? 'bg-orange-500/20' : 'bg-purple-500/20 opacity-50'
-      }`}></div>
-      
-      <div className={`absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t pointer-events-none transition-colors duration-500 ${
-         !isLoading && isActive ? 'from-black/30 to-transparent' : 'from-black/5 to-transparent'
-      }`}></div>
-
       <div className="relative z-10 flex flex-col items-center text-center w-full">
-        
-        {/* Status Badge Container */}
-        <div className="h-8 mb-4 flex items-center justify-center w-full">
+        <div className="h-6 mb-3 flex items-center justify-center w-full">
           {isLoading ? (
-             <div className="h-8 w-32 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
+             <div className="h-6 w-24 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
           ) : (
             <>
               {status === 'ACTIVE' && (
-                <div className="animate-pulse flex items-center gap-2 bg-red-500/20 px-4 py-1 rounded-full text-red-200 text-sm font-bold uppercase tracking-wider border border-red-500/30">
-                  <AlertTriangle className="w-4 h-4" />
-                  {t('rahuActive')}
+                <div className="animate-pulse flex items-center gap-1.5 bg-white/20 px-3 py-0.5 rounded-full text-white text-xs font-bold uppercase tracking-wider">
+                  <AlertTriangle className="w-3 h-3" />
+                  {t('active')}
                 </div>
               )}
               {status === 'UPCOMING' && (
-                <div className="flex items-center gap-2 bg-emerald-500/10 dark:bg-emerald-500/20 px-4 py-1 rounded-full text-emerald-700 dark:text-emerald-300 text-sm font-bold uppercase tracking-wider border border-emerald-500/30">
-                  {t('safePeriod')}
+                <div className={`flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
+                  {t('upcoming')}
                 </div>
               )}
               {status === 'PASSED' && (
-                <div className="flex items-center gap-2 bg-emerald-500/10 dark:bg-emerald-500/20 px-4 py-1 rounded-full text-emerald-700 dark:text-emerald-300 text-sm font-bold uppercase tracking-wider border border-emerald-500/30">
-                  <CheckCircle className="w-4 h-4" />
-                  {t('rahuPassed')}
+                <div className={`flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
+                  <CheckCircle className="w-3 h-3" />
+                  {t('passed')}
                 </div>
               )}
             </>
           )}
         </div>
 
-        {/* Title */}
         {isLoading ? (
-          <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-4 animate-pulse"></div>
+          <div className="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded mb-3 animate-pulse"></div>
         ) : (
-          <h2 className="text-lg font-medium opacity-80 mb-1">{t('todayRahu')}</h2>
+          <h2 className={`text-base font-bold mb-2 ${isActive ? 'text-white' : colorClass}`}>{title}</h2>
         )}
         
-        {/* Main Time Display */}
-        <div className="min-h-[60px] flex items-center justify-center mb-2">
+        <div className="min-h-[40px] flex items-center justify-center mb-2">
            {isLoading ? (
-              <div className="h-12 w-64 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse"></div>
-           ) : data ? (
-              <div className="text-4xl md:text-6xl font-black tracking-tight flex items-center justify-center gap-2 md:gap-4 flex-wrap">
-                <span>{formatTime(data.rahu.start)}</span>
-                <span className="text-xl md:text-3xl font-light opacity-60">–</span>
-                <span>{formatTime(data.rahu.end)}</span>
+              <div className="h-8 w-40 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
+           ) : time ? (
+              <div className="text-2xl md:text-3xl font-black tracking-tight flex items-center justify-center gap-2 flex-wrap">
+                <span>{formatTime(time.start)}</span>
+                <span className="text-lg font-light opacity-60">–</span>
+                <span>{formatTime(time.end)}</span>
               </div>
            ) : null}
         </div>
         
-        {/* Time Left */}
-        <div className="flex items-center justify-center h-6 mt-2 mb-8 w-full">
+        <div className="flex items-center justify-center h-5 mt-1 w-full">
            {isLoading ? (
-             <div className="h-5 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+             <div className="h-4 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
            ) : (
-             <div className="flex items-center gap-2 text-sm md:text-base font-medium opacity-90">
-                <Clock className="w-4 h-4" />
+             <div className={`flex items-center gap-1.5 text-sm font-medium ${isActive ? 'text-white/90' : 'text-slate-500 dark:text-slate-400'}`}>
+                <Clock className="w-3.5 h-3.5" />
                 <span>{timeLeft}</span>
              </div>
            )}
         </div>
-
-        {/* Grid Stats */}
-        <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
-          {isLoading || !data ? (
-             <>
-               <div className="h-20 rounded-xl bg-slate-100 dark:bg-slate-700/50 animate-pulse"></div>
-               <div className="h-20 rounded-xl bg-slate-100 dark:bg-slate-700/50 animate-pulse"></div>
-             </>
-          ) : (
-             <>
-               <div className={`flex flex-col items-center p-3 rounded-xl transition-colors ${isActive ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-100 dark:bg-slate-700/50'}`}>
-                 <Sun className={`w-5 h-5 mb-1 ${isActive ? 'text-amber-500' : 'text-amber-500'}`} />
-                 <span className={`text-xs ${isActive ? 'text-slate-500' : 'opacity-60'}`}>{t('sunrise')}</span>
-                 <span className="font-semibold">{formatTime(data.sunrise)}</span>
-               </div>
-               <div className={`flex flex-col items-center p-3 rounded-xl transition-colors ${isActive ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-100 dark:bg-slate-700/50'}`}>
-                 <Moon className={`w-5 h-5 mb-1 ${isActive ? 'text-indigo-600' : 'text-indigo-400'}`} />
-                 <span className={`text-xs ${isActive ? 'text-slate-500' : 'opacity-60'}`}>{t('sunset')}</span>
-                 <span className="font-semibold">{formatTime(data.sunset)}</span>
-               </div>
-             </>
-          )}
-        </div>
       </div>
+    </div>
+  );
+};
+
+export const CurrentRahu: React.FC<Props> = ({ data, isLoading = false }) => {
+  const { t, language } = useLanguage();
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <TimingCard 
+        title={t('rahuKaal') || 'Rahu Kaal'}
+        time={data?.rahu}
+        isLoading={isLoading}
+        colorClass="text-red-600 dark:text-red-400"
+        bgClass="bg-red-50 dark:bg-red-900/10"
+        activeBgClass="bg-gradient-to-br from-rose-600 to-red-700"
+        language={language}
+        t={t}
+      />
+      <TimingCard 
+        title={t('yamagandam') || 'Yamagandam'}
+        time={data?.yamagandam}
+        isLoading={isLoading}
+        colorClass="text-orange-600 dark:text-orange-400"
+        bgClass="bg-orange-50 dark:bg-orange-900/10"
+        activeBgClass="bg-gradient-to-br from-orange-500 to-amber-600"
+        language={language}
+        t={t}
+      />
+      <TimingCard 
+        title={t('gulika') || 'Gulika Kaal'}
+        time={data?.gulika}
+        isLoading={isLoading}
+        colorClass="text-yellow-600 dark:text-yellow-400"
+        bgClass="bg-yellow-50 dark:bg-yellow-900/10"
+        activeBgClass="bg-gradient-to-br from-yellow-400 to-yellow-600"
+        language={language}
+        t={t}
+      />
     </div>
   );
 };
