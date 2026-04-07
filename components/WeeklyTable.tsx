@@ -5,6 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 interface Props {
   forecast: DailyData[];
+  selectedDate?: Date;
   onLoadMore?: () => void;
   isLoadingMore?: boolean;
   hasMore?: boolean;
@@ -12,6 +13,7 @@ interface Props {
 
 export const WeeklyTable: React.FC<Props> = ({ 
   forecast, 
+  selectedDate,
   onLoadMore, 
   isLoadingMore = false, 
   hasMore = false 
@@ -68,11 +70,12 @@ export const WeeklyTable: React.FC<Props> = ({
             ) : (
               forecast.map((day, idx) => {
                 const isToday = day.date.toDateString() === new Date().toDateString();
+                const isSelected = selectedDate && day.date.toDateString() === selectedDate.toDateString();
                 
                 return (
-                  <tr key={day.date.toISOString()} className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${isToday ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>
+                  <tr key={day.date.toISOString()} className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${isSelected ? 'bg-indigo-50/80 dark:bg-indigo-900/20' : (isToday ? 'bg-slate-50/50 dark:bg-slate-800/50' : '')}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`block font-medium ${isToday ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                      <span className={`block font-medium ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : (isToday ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-200')}`}>
                         {isToday ? `${t('today')} (${formatDate(day.date)})` : formatDate(day.date)}
                       </span>
                     </td>

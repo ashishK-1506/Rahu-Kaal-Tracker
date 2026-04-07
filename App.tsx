@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getRahuKaal, getForecastBatch, getCityName } from './services/api';
 import { Coordinates, DailyData, LoadingState } from './types';
 import { CurrentRahu } from './components/CurrentRahu';
+import { SolarInfo } from './components/SolarInfo';
 import { WeeklyTable } from './components/WeeklyTable';
 import { LocationControl } from './components/LocationControl';
 import { PopularCities } from './components/PopularCities';
@@ -9,9 +10,16 @@ import { AboutSection } from './components/AboutSection';
 import { AdContainer } from './components/AdContainer';
 import { SubscriptionForm } from './components/SubscriptionForm';
 import { requestNotificationPermission, scheduleNotification, sendTestNotification } from './services/notificationService';
-import { Bell, BellRing, Info, Loader2, Sun, Moon, Languages, ArrowUp } from 'lucide-react';
+import { DateSelector } from './components/DateSelector';
+import { Bell, BellRing, Info, Loader2, Sun, Moon, Languages, ArrowUp, X } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { useLanguage } from './contexts/LanguageContext';
+import { Routes, Route, Link } from 'react-router-dom';
+import { WhatIsRahuKaal } from './pages/WhatIsRahuKaal';
+import { Remedies } from './pages/Remedies';
+import { DoAndDont } from './pages/DoAndDont';
+import { RahuKaalChart } from './pages/RahuKaalChart';
+import { CityPage } from './pages/CityPage';
 
 // Helper to handle Date serialization in localStorage
 const serializeData = (data: DailyData[]) => JSON.stringify(data);
@@ -55,6 +63,7 @@ function App() {
     return saved ? JSON.parse(saved) : { lat: 28.6139, lng: 77.2090, label: 'New Delhi (Default)' };
   });
 
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dailyData, setDailyData] = useState<DailyData | null>(null);
   const [forecast, setForecast] = useState<DailyData[]>([]);
   const [loading, setLoading] = useState<LoadingState>(LoadingState.IDLE);
@@ -70,6 +79,11 @@ function App() {
     return saved ? parseInt(saved, 10) : 15;
   });
 
+  const [notifyOnEnd, setNotifyOnEnd] = useState<boolean>(() => {
+    const saved = localStorage.getItem('notify_on_end');
+    return saved ? saved === 'true' : false;
+  });
+
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('theme');
     if (saved) return saved;
@@ -78,6 +92,40 @@ function App() {
 
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+
+  // PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      setDeferredPrompt(e);
+      // Update UI notify the user they can install the PWA
+      setShowInstallBtn(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    // Show the install prompt
+    deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setShowInstallBtn(false);
+    }
+    // We've used the prompt, and can't use it again, throw it away
+    setDeferredPrompt(null);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -105,6 +153,12 @@ function App() {
     localStorage.setItem('alert_offset', val.toString());
   };
 
+  const handleNotifyOnEndChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.checked;
+    setNotifyOnEnd(val);
+    localStorage.setItem('notify_on_end', val.toString());
+  };
+
   useEffect(() => {
     if (!localStorage.getItem('user_coords') && 'geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -126,22 +180,26 @@ function App() {
     const cacheKey = `rahu_forecast_${coords.lat.toFixed(3)}_${coords.lng.toFixed(3)}`;
 
     async function loadData() {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const todayStr = new Date().toDateString();
+      const targetStart = new Date(selectedDate);
+      targetStart.setHours(0, 0, 0, 0);
+      const targetStr = selectedDate.toDateString();
       
       // 1. Check Cache First
       const cachedJson = localStorage.getItem(cacheKey);
       if (cachedJson) {
         const cachedData = deserializeData(cachedJson);
-        // Filter out past dates (keep today and future)
-        const validForecast = cachedData.filter(d => d.date >= todayStart);
+        // Filter out past dates relative to the selected date
+        const validForecast = cachedData.filter(d => {
+          const dStart = new Date(d.date);
+          dStart.setHours(0, 0, 0, 0);
+          return dStart.getTime() >= targetStart.getTime();
+        });
 
-        // If we have "Today" in the cache, load it immediately!
-        const hasToday = validForecast.some(d => d.date.toDateString() === todayStr);
-        if (hasToday && isMounted) {
-          const todayData = validForecast.find(d => d.date.toDateString() === todayStr)!;
-          setDailyData(todayData);
+        // If we have "Selected Date" in the cache, load it immediately!
+        const hasTarget = validForecast.some(d => d.date.toDateString() === targetStr);
+        if (hasTarget && validForecast.length >= 7 && isMounted) {
+          const targetData = validForecast.find(d => d.date.toDateString() === targetStr)!;
+          setDailyData(targetData);
           setForecast(validForecast);
           setLoading(LoadingState.SUCCESS);
           
@@ -154,17 +212,17 @@ function App() {
       if (isMounted) {
         setLoading(LoadingState.LOADING);
         // Reset only if we didn't load from cache (to avoid flashing if partial data existed)
-        if (!dailyData) setDailyData(null); 
+        if (!dailyData || dailyData.date.toDateString() !== targetStr) setDailyData(null); 
       }
 
       try {
-        const today = await getRahuKaal(coords);
+        const targetDayData = await getRahuKaal(coords, selectedDate);
         if (isMounted) {
-          setDailyData(today);
+          setDailyData(targetDayData);
           setLoading(LoadingState.SUCCESS);
         }
 
-        const week = await getForecastBatch(coords, new Date(), 7);
+        const week = await getForecastBatch(coords, selectedDate, 7);
         if (isMounted) {
           setForecast(week);
           localStorage.setItem(cacheKey, serializeData(week));
@@ -176,7 +234,7 @@ function App() {
     
     loadData();
     return () => { isMounted = false; };
-  }, [coords]);
+  }, [coords, selectedDate]);
 
   const handleLoadMore = async () => {
     if (loadingMore || forecast.length >= MAX_DAYS) return;
@@ -203,9 +261,9 @@ function App() {
 
   useEffect(() => {
     if (notifPermission === 'granted' && dailyData) {
-      scheduleNotification(dailyData.rahu, alertOffset);
+      scheduleNotification(dailyData.rahu, alertOffset, notifyOnEnd);
     }
-  }, [dailyData, notifPermission, alertOffset]);
+  }, [dailyData, notifPermission, alertOffset, notifyOnEnd]);
 
   const handleLocationChange = (newCoords: Coordinates) => {
     setCoords(newCoords);
@@ -217,7 +275,7 @@ function App() {
     const perm = await requestNotificationPermission();
     setNotifPermission(perm);
     if (perm === 'granted' && dailyData) {
-      scheduleNotification(dailyData.rahu, alertOffset);
+      scheduleNotification(dailyData.rahu, alertOffset, notifyOnEnd);
       sendTestNotification();
     }
   };
@@ -256,17 +314,28 @@ function App() {
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
              {notifPermission === 'granted' ? (
-                 <div className="flex items-center gap-2 pl-4 pr-2 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-medium transition-colors border border-green-200 dark:border-green-900">
-                    <BellRing className="w-4 h-4" />
-                    <span className="hidden sm:inline">{t('alertLabel')}</span>
-                    <select value={alertOffset} onChange={handleOffsetChange} className="bg-transparent border-none outline-none font-bold cursor-pointer text-green-800 dark:text-green-200">
-                      <option value="0">{t('atStart')}</option>
-                      <option value="5">5{t('minBefore')}</option>
-                      <option value="10">10{t('minBefore')}</option>
-                      <option value="15">15{t('minBefore')}</option>
-                      <option value="30">30{t('minBefore')}</option>
-                      <option value="60">1{t('hourBefore')}</option>
-                    </select>
+                 <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                   <div className="flex items-center gap-2 pl-4 pr-2 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-medium transition-colors border border-green-200 dark:border-green-900">
+                      <BellRing className="w-4 h-4" />
+                      <span className="hidden sm:inline">{t('alertLabel')}</span>
+                      <select value={alertOffset} onChange={handleOffsetChange} className="bg-transparent border-none outline-none font-bold cursor-pointer text-green-800 dark:text-green-200">
+                        <option value="0">{t('atStart')}</option>
+                        <option value="5">5{t('minBefore')}</option>
+                        <option value="10">10{t('minBefore')}</option>
+                        <option value="15">15{t('minBefore')}</option>
+                        <option value="30">30{t('minBefore')}</option>
+                        <option value="60">1{t('hourBefore')}</option>
+                      </select>
+                   </div>
+                   <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+                     <input 
+                       type="checkbox" 
+                       checked={notifyOnEnd}
+                       onChange={handleNotifyOnEndChange}
+                       className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 bg-transparent"
+                     />
+                     {t('notifyOnEnd')}
+                   </label>
                  </div>
              ) : (
                 <button onClick={enableNotifications} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-sm font-medium shadow-lg transition-all">
@@ -281,43 +350,133 @@ function App() {
           <LocationControl currentCoords={coords} onLocationChange={handleLocationChange} />
         </nav>
 
-        <main id="main-content" role="main" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          {loading === LoadingState.ERROR && !dailyData ? (
-             <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-2xl text-center">
-                {t('errorSolar')}
-             </div>
-          ) : (
-            <>
-              <CurrentRahu data={dailyData} isLoading={isLoading} />
-              <AdContainer slotId="YOUR_SLOT_ID_1" />
-              <div className="bg-indigo-50 dark:bg-slate-900 p-6 rounded-2xl border border-indigo-100 dark:border-slate-800 flex gap-4">
-                <Info className="w-6 h-6 text-indigo-500 shrink-0 mt-1" />
-                <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2 w-full">
-                  <h2 className="font-bold text-slate-900 dark:text-white text-base">{t('infoTitle')}</h2>
-                  <div className={`relative ${!isInfoExpanded ? 'max-h-20 overflow-hidden' : ''}`}>
-                    <p className="leading-relaxed">{t('infoDesc')}</p>
-                    {!isInfoExpanded && (
-                      <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-indigo-50 dark:from-slate-900 to-transparent pointer-events-none" />
-                    )}
-                  </div>
-                  <button 
-                    onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-                    className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline focus:outline-none text-sm mt-1"
-                  >
-                    {isInfoExpanded ? t('readLess') || 'Read less' : t('readMore') || 'Read more'}
-                  </button>
-                </div>
+        {showInstallBtn && (
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 text-white animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 p-2 rounded-xl">
+                <img src="/rahu-coin.png" alt="App Icon" className="w-8 h-8 object-contain" />
               </div>
-              <WeeklyTable forecast={forecast} onLoadMore={handleLoadMore} isLoadingMore={loadingMore} hasMore={hasMore} />
-              <PopularCities onCitySelect={handleLocationChange} />
-              <SubscriptionForm currentCoords={coords} />
-              <AdContainer slotId="YOUR_SLOT_ID_2" />
-              <AboutSection />
-            </>
-          )}
+              <div>
+                <h3 className="font-bold text-sm sm:text-base">Add Rahu Kaal Tracker to your Home Screen</h3>
+                <p className="text-indigo-100 text-xs sm:text-sm">Get fast offline access and daily alerts.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button 
+                onClick={handleInstallClick}
+                className="flex-1 sm:flex-none px-4 py-2 bg-white text-indigo-600 hover:bg-indigo-50 font-bold rounded-xl text-sm transition-colors shadow-sm"
+              >
+                {t('installApp')}
+              </button>
+              <button 
+                onClick={() => setShowInstallBtn(false)}
+                className="p-2 text-indigo-100 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                aria-label="Dismiss"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <main id="main-content" role="main" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <Routes>
+            <Route path="/" element={
+              <>
+                <DateSelector selectedDate={selectedDate} onChange={setSelectedDate} />
+                
+                {loading === LoadingState.ERROR && !dailyData ? (
+                   <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-2xl text-center">
+                      {t('errorSolar')}
+                   </div>
+                ) : (
+                  <>
+                    <CurrentRahu data={dailyData} isLoading={isLoading} />
+                    <SolarInfo data={dailyData} isLoading={isLoading} />
+                    <AdContainer slotId="YOUR_SLOT_ID_1" />
+                    <div className="bg-indigo-50 dark:bg-slate-900 p-6 rounded-2xl border border-indigo-100 dark:border-slate-800 flex gap-4">
+                      <Info className="w-6 h-6 text-indigo-500 shrink-0 mt-1" />
+                      <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2 w-full">
+                        <h2 className="font-bold text-slate-900 dark:text-white text-base">{t('infoTitle')}</h2>
+                        <div className={`relative ${!isInfoExpanded ? 'max-h-20 overflow-hidden' : ''}`}>
+                          <p className="leading-relaxed">{t('infoDesc')}</p>
+                          {!isInfoExpanded && (
+                            <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-indigo-50 dark:from-slate-900 to-transparent pointer-events-none" />
+                          )}
+                        </div>
+                        <button 
+                          onClick={() => setIsInfoExpanded(!isInfoExpanded)}
+                          className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline focus:outline-none text-sm mt-1"
+                        >
+                          {isInfoExpanded ? t('readLess') || 'Read less' : t('readMore') || 'Read more'}
+                        </button>
+                      </div>
+                    </div>
+                    <WeeklyTable forecast={forecast} selectedDate={selectedDate} onLoadMore={handleLoadMore} isLoadingMore={loadingMore} hasMore={hasMore} />
+                    <PopularCities onCitySelect={handleLocationChange} />
+                    <SubscriptionForm currentCoords={coords} />
+                    <AdContainer slotId="YOUR_SLOT_ID_2" />
+                    <AboutSection />
+                  </>
+                )}
+              </>
+            } />
+            <Route path="/what-is-rahu-kaal" element={<WhatIsRahuKaal />} />
+            <Route path="/remedies" element={<Remedies />} />
+            <Route path="/do-and-dont" element={<DoAndDont />} />
+            <Route path="/rahu-kaal-chart" element={<RahuKaalChart />} />
+            <Route path="/rahu-kaal-today-:city" element={
+              <CityPage onCitySelect={handleLocationChange}>
+                <>
+                  <DateSelector selectedDate={selectedDate} onChange={setSelectedDate} />
+                  
+                  {loading === LoadingState.ERROR && !dailyData ? (
+                     <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-2xl text-center">
+                        {t('errorSolar')}
+                     </div>
+                  ) : (
+                    <>
+                      <CurrentRahu data={dailyData} isLoading={isLoading} />
+                      <SolarInfo data={dailyData} isLoading={isLoading} />
+                      <AdContainer slotId="YOUR_SLOT_ID_1" />
+                      <div className="bg-indigo-50 dark:bg-slate-900 p-6 rounded-2xl border border-indigo-100 dark:border-slate-800 flex gap-4">
+                        <Info className="w-6 h-6 text-indigo-500 shrink-0 mt-1" />
+                        <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2 w-full">
+                          <h2 className="font-bold text-slate-900 dark:text-white text-base">{t('infoTitle')}</h2>
+                          <div className={`relative ${!isInfoExpanded ? 'max-h-20 overflow-hidden' : ''}`}>
+                            <p className="leading-relaxed">{t('infoDesc')}</p>
+                            {!isInfoExpanded && (
+                              <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-indigo-50 dark:from-slate-900 to-transparent pointer-events-none" />
+                            )}
+                          </div>
+                          <button 
+                            onClick={() => setIsInfoExpanded(!isInfoExpanded)}
+                            className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline focus:outline-none text-sm mt-1"
+                          >
+                            {isInfoExpanded ? t('readLess') || 'Read less' : t('readMore') || 'Read more'}
+                          </button>
+                        </div>
+                      </div>
+                      <WeeklyTable forecast={forecast} selectedDate={selectedDate} onLoadMore={handleLoadMore} isLoadingMore={loadingMore} hasMore={hasMore} />
+                      <PopularCities onCitySelect={handleLocationChange} />
+                      <SubscriptionForm currentCoords={coords} />
+                      <AdContainer slotId="YOUR_SLOT_ID_2" />
+                      <AboutSection />
+                    </>
+                  )}
+                </>
+              </CityPage>
+            } />
+          </Routes>
         </main>
         
         <footer role="contentinfo" className="text-center text-slate-400 text-sm py-8">
+           <div className="flex flex-wrap justify-center gap-4 mb-4">
+             <Link to="/what-is-rahu-kaal" className="hover:text-indigo-500 transition-colors">What is Rahu Kaal?</Link>
+             <Link to="/remedies" className="hover:text-indigo-500 transition-colors">Remedies & Mantras</Link>
+             <Link to="/do-and-dont" className="hover:text-indigo-500 transition-colors">Do's and Don'ts</Link>
+             <Link to="/rahu-kaal-chart" className="hover:text-indigo-500 transition-colors">Standard Chart</Link>
+           </div>
            <p>© {new Date().getFullYear()} Rahu Kaal Tracker. All rights reserved.</p>
            <p className="text-xs mt-1">{t('footerText')}</p>
         </footer>

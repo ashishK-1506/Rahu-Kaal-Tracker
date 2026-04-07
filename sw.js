@@ -1,8 +1,9 @@
-const CACHE_NAME = 'rahu-tracker-v1';
+const CACHE_NAME = 'rahu-tracker-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './rahu-coin.png'
+  './rahu-coin.png',
+  './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -15,13 +16,46 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
+  
+  // Don't cache API requests to sunrise-sunset or nominatim
+  const url = new URL(event.request.url);
+  if (url.hostname.includes('api.sunrise-sunset.org') || url.hostname.includes('nominatim.openstreetmap.org')) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        // Only cache successful responses
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        // Fallback for offline if not in cache
+        return cachedResponse;
+      });
+      
+      return cachedResponse || fetchPromise;
     })
   );
 });
@@ -34,7 +68,8 @@ self.addEventListener('push', (event) => {
     body: data.body || 'Check the app for timings.',
     icon: '/rahu-coin.png',
     badge: '/rahu-coin.png',
-    tag: 'rahu-notification'
+    tag: data.tag || 'rahu-notification',
+    vibrate: [200, 100, 200]
   };
 
   event.waitUntil(

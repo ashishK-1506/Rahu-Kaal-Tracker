@@ -36,7 +36,7 @@ const translations: Record<Language, Record<string, string>> = {
     "infoDesc": "Rahu Kaal is a period considered inauspicious in Vedic Astrology for starting new ventures. It is calculated daily based on local sunrise and sunset.",
     "readMore": "Read more",
     "readLess": "Read less",
-    "upcomingTimings": "Upcoming Timings",
+    "upcomingTimings": "Weekly Timings",
     "planAhead": "Plan your important activities ahead.",
     "date": "Date",
     "time": "Rahu Kaal Time",
@@ -48,6 +48,10 @@ const translations: Record<Language, Record<string, string>> = {
     "active": "Active",
     "upcoming": "Upcoming",
     "passed": "Passed",
+    "solarInfo": "Solar Information & Calculation",
+    "daylight": "Daylight",
+    "segment": "per segment",
+    "calculationBreakdown": "Calculation Breakdown",
     "loadMore": "Load Next 7 Days",
     "loading": "Loading...",
     "popularCities": "Popular Cities Today",
@@ -77,7 +81,9 @@ const translations: Record<Language, Record<string, string>> = {
     "footerText": "Timings are cached locally for offline access and speed.",
     "errorSolar": "Failed to load solar data. Please check your connection or try a different location.",
     "langToggle": "हिन्दी",
-    "min": "min"
+    "min": "min",
+    "notifyOnEnd": "Notify when ends",
+    "installApp": "Install App"
   },
   hi: {
     "appTitle": "राहु काल ट्रैकर",
@@ -106,7 +112,7 @@ const translations: Record<Language, Record<string, string>> = {
     "infoDesc": "राहु काल वैदिक ज्योतिष में नए कार्यों को शुरू करने के लिए अशुभ माना जाने वाला समय है। इसकी गणना स्थानीय सूर्योदय और सूर्यास्त के आधार पर प्रतिदिन की जाती है।",
     "readMore": "और पढ़ें",
     "readLess": "कम पढ़ें",
-    "upcomingTimings": "आगामी समय",
+    "upcomingTimings": "साप्ताहिक समय",
     "planAhead": "अपनी महत्वपूर्ण गतिविधियों की योजना पहले से बनाएं।",
     "date": "दिनांक",
     "time": "राहु काल समय",
@@ -118,6 +124,10 @@ const translations: Record<Language, Record<string, string>> = {
     "active": "सक्रिय",
     "upcoming": "आगामी",
     "passed": "बीत गया",
+    "solarInfo": "सौर जानकारी और गणना",
+    "daylight": "दिन का प्रकाश",
+    "segment": "प्रति खंड",
+    "calculationBreakdown": "गणना विवरण",
     "loadMore": "अगले 7 दिन लोड करें",
     "loading": "लोड हो रहा है...",
     "popularCities": "आज के लोकप्रिय शहर",
@@ -147,7 +157,9 @@ const translations: Record<Language, Record<string, string>> = {
     "footerText": "ऑफ़लाइन पहुंच और गति के लिए समय स्थानीय रूप से कैश किया जाता है।",
     "errorSolar": "सौर डेटा लोड करने में विफल। कृपया अपना कनेक्शन जांचें या कोई अलग स्थान आज़माएं।",
     "langToggle": "English",
-    "min": "मिनट"
+    "min": "मिनट",
+    "notifyOnEnd": "समाप्त होने पर सूचित करें",
+    "installApp": "ऐप इंस्टॉल करें"
   }
 };
 
