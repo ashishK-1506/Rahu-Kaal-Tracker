@@ -14,12 +14,10 @@ import { DateSelector } from './components/DateSelector';
 import { Bell, BellRing, Info, Loader2, Sun, Moon, Languages, ArrowUp, X } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 import { useLanguage } from './contexts/LanguageContext';
-import { Routes, Route, Link } from 'react-router-dom';
 import { WhatIsRahuKaal } from './pages/WhatIsRahuKaal';
 import { Remedies } from './pages/Remedies';
 import { DoAndDont } from './pages/DoAndDont';
 import { RahuKaalChart } from './pages/RahuKaalChart';
-import { CityPage } from './pages/CityPage';
 
 // Helper to handle Date serialization in localStorage
 const serializeData = (data: DailyData[]) => JSON.stringify(data);
@@ -92,6 +90,7 @@ function App() {
 
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+  const [currentView, setCurrentView] = useState('home');
 
   // PWA Install Prompt State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -380,102 +379,58 @@ function App() {
         )}
 
         <main id="main-content" role="main" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Routes>
-            <Route path="/" element={
-              <>
-                <DateSelector selectedDate={selectedDate} onChange={setSelectedDate} />
-                
-                {loading === LoadingState.ERROR && !dailyData ? (
-                   <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-2xl text-center">
-                      {t('errorSolar')}
-                   </div>
-                ) : (
-                  <>
-                    <CurrentRahu data={dailyData} isLoading={isLoading} />
-                    <SolarInfo data={dailyData} isLoading={isLoading} />
-                    <AdContainer slotId="YOUR_SLOT_ID_1" />
-                    <div className="bg-indigo-50 dark:bg-slate-900 p-6 rounded-2xl border border-indigo-100 dark:border-slate-800 flex gap-4">
-                      <Info className="w-6 h-6 text-indigo-500 shrink-0 mt-1" />
-                      <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2 w-full">
-                        <h2 className="font-bold text-slate-900 dark:text-white text-base">{t('infoTitle')}</h2>
-                        <div className={`relative ${!isInfoExpanded ? 'max-h-20 overflow-hidden' : ''}`}>
-                          <p className="leading-relaxed">{t('infoDesc')}</p>
-                          {!isInfoExpanded && (
-                            <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-indigo-50 dark:from-slate-900 to-transparent pointer-events-none" />
-                          )}
-                        </div>
-                        <button 
-                          onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-                          className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline focus:outline-none text-sm mt-1"
-                        >
-                          {isInfoExpanded ? t('readLess') || 'Read less' : t('readMore') || 'Read more'}
-                        </button>
-                      </div>
-                    </div>
-                    <WeeklyTable forecast={forecast} selectedDate={selectedDate} onLoadMore={handleLoadMore} isLoadingMore={loadingMore} hasMore={hasMore} />
-                    <PopularCities onCitySelect={handleLocationChange} />
-                    <SubscriptionForm currentCoords={coords} />
-                    <AdContainer slotId="YOUR_SLOT_ID_2" />
-                    <AboutSection />
-                  </>
-                )}
-              </>
-            } />
-            <Route path="/what-is-rahu-kaal" element={<WhatIsRahuKaal />} />
-            <Route path="/remedies" element={<Remedies />} />
-            <Route path="/do-and-dont" element={<DoAndDont />} />
-            <Route path="/rahu-kaal-chart" element={<RahuKaalChart />} />
-            <Route path="/rahu-kaal-today-:city" element={
-              <CityPage onCitySelect={handleLocationChange}>
+          {currentView === 'home' && (
+            <>
+              <DateSelector selectedDate={selectedDate} onChange={setSelectedDate} />
+              
+              {loading === LoadingState.ERROR && !dailyData ? (
+                 <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-2xl text-center">
+                    {t('errorSolar')}
+                 </div>
+              ) : (
                 <>
-                  <DateSelector selectedDate={selectedDate} onChange={setSelectedDate} />
-                  
-                  {loading === LoadingState.ERROR && !dailyData ? (
-                     <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-2xl text-center">
-                        {t('errorSolar')}
-                     </div>
-                  ) : (
-                    <>
-                      <CurrentRahu data={dailyData} isLoading={isLoading} />
-                      <SolarInfo data={dailyData} isLoading={isLoading} />
-                      <AdContainer slotId="YOUR_SLOT_ID_1" />
-                      <div className="bg-indigo-50 dark:bg-slate-900 p-6 rounded-2xl border border-indigo-100 dark:border-slate-800 flex gap-4">
-                        <Info className="w-6 h-6 text-indigo-500 shrink-0 mt-1" />
-                        <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2 w-full">
-                          <h2 className="font-bold text-slate-900 dark:text-white text-base">{t('infoTitle')}</h2>
-                          <div className={`relative ${!isInfoExpanded ? 'max-h-20 overflow-hidden' : ''}`}>
-                            <p className="leading-relaxed">{t('infoDesc')}</p>
-                            {!isInfoExpanded && (
-                              <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-indigo-50 dark:from-slate-900 to-transparent pointer-events-none" />
-                            )}
-                          </div>
-                          <button 
-                            onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-                            className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline focus:outline-none text-sm mt-1"
-                          >
-                            {isInfoExpanded ? t('readLess') || 'Read less' : t('readMore') || 'Read more'}
-                          </button>
-                        </div>
+                  <CurrentRahu data={dailyData} isLoading={isLoading} />
+                  <SolarInfo data={dailyData} isLoading={isLoading} />
+                  <AdContainer slotId="YOUR_SLOT_ID_1" />
+                  <div className="bg-indigo-50 dark:bg-slate-900 p-6 rounded-2xl border border-indigo-100 dark:border-slate-800 flex gap-4">
+                    <Info className="w-6 h-6 text-indigo-500 shrink-0 mt-1" />
+                    <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2 w-full">
+                      <h2 className="font-bold text-slate-900 dark:text-white text-base">{t('infoTitle')}</h2>
+                      <div className={`relative ${!isInfoExpanded ? 'max-h-20 overflow-hidden' : ''}`}>
+                        <p className="leading-relaxed">{t('infoDesc')}</p>
+                        {!isInfoExpanded && (
+                          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-indigo-50 dark:from-slate-900 to-transparent pointer-events-none" />
+                        )}
                       </div>
-                      <WeeklyTable forecast={forecast} selectedDate={selectedDate} onLoadMore={handleLoadMore} isLoadingMore={loadingMore} hasMore={hasMore} />
-                      <PopularCities onCitySelect={handleLocationChange} />
-                      <SubscriptionForm currentCoords={coords} />
-                      <AdContainer slotId="YOUR_SLOT_ID_2" />
-                      <AboutSection />
-                    </>
-                  )}
+                      <button 
+                        onClick={() => setIsInfoExpanded(!isInfoExpanded)}
+                        className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline focus:outline-none text-sm mt-1"
+                      >
+                        {isInfoExpanded ? t('readLess') || 'Read less' : t('readMore') || 'Read more'}
+                      </button>
+                    </div>
+                  </div>
+                  <WeeklyTable forecast={forecast} selectedDate={selectedDate} onLoadMore={handleLoadMore} isLoadingMore={loadingMore} hasMore={hasMore} />
+                  <PopularCities onCitySelect={handleLocationChange} />
+                  <SubscriptionForm currentCoords={coords} />
+                  <AdContainer slotId="YOUR_SLOT_ID_2" />
+                  <AboutSection />
                 </>
-              </CityPage>
-            } />
-          </Routes>
+              )}
+            </>
+          )}
+          {currentView === 'what-is-rahu-kaal' && <WhatIsRahuKaal onBack={() => setCurrentView('home')} />}
+          {currentView === 'remedies' && <Remedies onBack={() => setCurrentView('home')} />}
+          {currentView === 'do-and-dont' && <DoAndDont onBack={() => setCurrentView('home')} />}
+          {currentView === 'rahu-kaal-chart' && <RahuKaalChart onBack={() => setCurrentView('home')} />}
         </main>
         
         <footer role="contentinfo" className="text-center text-slate-400 text-sm py-8">
            <div className="flex flex-wrap justify-center gap-4 mb-4">
-             <Link to="/what-is-rahu-kaal" className="hover:text-indigo-500 transition-colors">What is Rahu Kaal?</Link>
-             <Link to="/remedies" className="hover:text-indigo-500 transition-colors">Remedies & Mantras</Link>
-             <Link to="/do-and-dont" className="hover:text-indigo-500 transition-colors">Do's and Don'ts</Link>
-             <Link to="/rahu-kaal-chart" className="hover:text-indigo-500 transition-colors">Standard Chart</Link>
+             <button onClick={() => { setCurrentView('what-is-rahu-kaal'); window.scrollTo(0,0); }} className="hover:text-indigo-500 transition-colors">What is Rahu Kaal?</button>
+             <button onClick={() => { setCurrentView('remedies'); window.scrollTo(0,0); }} className="hover:text-indigo-500 transition-colors">Remedies & Mantras</button>
+             <button onClick={() => { setCurrentView('do-and-dont'); window.scrollTo(0,0); }} className="hover:text-indigo-500 transition-colors">Do's and Don'ts</button>
+             <button onClick={() => { setCurrentView('rahu-kaal-chart'); window.scrollTo(0,0); }} className="hover:text-indigo-500 transition-colors">Standard Chart</button>
            </div>
            <p>© {new Date().getFullYear()} Rahu Kaal Tracker. All rights reserved.</p>
            <p className="text-xs mt-1">{t('footerText')}</p>

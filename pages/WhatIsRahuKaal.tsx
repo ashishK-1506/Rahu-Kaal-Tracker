@@ -1,9 +1,12 @@
 import React, { useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
-export function WhatIsRahuKaal() {
+interface Props {
+  onBack: () => void;
+}
+
+export function WhatIsRahuKaal({ onBack }: Props) {
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -20,10 +23,10 @@ export function WhatIsRahuKaal() {
 
   return (
     <div className="max-w-3xl mx-auto bg-white dark:bg-slate-800 rounded-2xl p-6 md:p-10 shadow-sm border border-slate-200 dark:border-slate-700 mt-8 animate-in fade-in slide-in-from-bottom-4">
-      <Link to="/" className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:underline mb-6">
+      <button onClick={onBack} className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:underline mb-6">
         <ArrowLeft className="w-4 h-4" />
         Back to Tracker
-      </Link>
+      </button>
       
       <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-6 tracking-tight">
         What is Rahu Kaal?

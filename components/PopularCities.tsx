@@ -4,8 +4,6 @@ import { DailyData, Coordinates } from '../types';
 import { Loader2, MapPin } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-import { Link } from 'react-router-dom';
-
 const POPULAR_CITIES = [
   { label: 'Delhi', lat: 28.6139, lng: 77.2090 },
   { label: 'Mumbai', lat: 19.0760, lng: 72.8777 },
@@ -81,10 +79,12 @@ export const PopularCities: React.FC<Props> = ({ onCitySelect }) => {
             {POPULAR_CITIES.map((city) => {
               const data = cityData[city.label];
               return (
-                <Link
+                <button
                   key={city.label}
-                  to={`/rahu-kaal-today-${city.label.toLowerCase()}`}
-                  onClick={() => onCitySelect(city)}
+                  onClick={() => {
+                    onCitySelect(city);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className="flex flex-col p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all text-left group"
                 >
                   <span className="font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
@@ -97,7 +97,7 @@ export const PopularCities: React.FC<Props> = ({ onCitySelect }) => {
                   ) : (
                     <span className="text-sm text-slate-400 mt-1">Unavailable</span>
                   )}
-                </Link>
+                </button>
               );
             })}
           </div>
