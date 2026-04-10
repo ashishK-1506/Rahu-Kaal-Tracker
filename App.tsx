@@ -13,6 +13,7 @@ import { requestNotificationPermission, scheduleNotification, sendTestNotificati
 import { DateSelector } from './components/DateSelector';
 import { Bell, BellRing, Info, Loader2, Sun, Moon, Languages, ArrowUp, X } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { useLanguage } from './contexts/LanguageContext';
 import { WhatIsRahuKaal } from './pages/WhatIsRahuKaal';
 import { Remedies } from './pages/Remedies';
@@ -448,6 +449,7 @@ function App() {
       )}
       
       <Analytics />
+      <SpeedInsights />
     </div>
   );
 }
